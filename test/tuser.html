@@ -1,0 +1,3245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdVault Earnings</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src='//libtl.com/sdk.js' data-zone='9661177' data-sdk='show_9661177'></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+<style>
+    :root {
+      --color-primary: #1A5237; /* A deep emerald green - adjust as needed */
+      --color-secondary: #3B7A57; /* A slightly lighter forest green - adjust as needed */
+      --color-accent: #FFD700; /* Vibrant Gold - adjust as needed */
+      --color-success: #28a745; /* A standard, pleasant green for success */
+
+      /* New Logo-Inspired Colors */
+      --color-logo-blue: #2A64B2; /* A strong blue from the logo */
+      --color-logo-green: #4CAF50; /* A vibrant green from the logo */
+      --color-logo-gold: #FFD700; /* Gold from dollar sign */
+      --color-logo-orange: #FFA500; /* Orange from bar graphs */
+      --color-logo-light-green: #8BC34A; /* Lighter green for accents */
+    }
+.withdraw-btn {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #e0e0e0 0%, #f8f9fa 100%);
+      color: #334155;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .fixed-top-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6rem;
+      z-index: 1001;
+      background: #ffffff;
+      padding: 1rem;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+      border-radius: 0 0 1rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .fixed-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 5rem;
+      z-index: 1000;
+      background: #ffffff;
+      padding: 1rem;
+      box-shadow: 0 -15px 30px rgba(0,0,0,0.1);
+      border-radius: 1rem 1rem 0 0;
+    }
+
+    main {
+      position: fixed;
+      top: 6rem;
+      bottom: 5rem;
+      left: 0;
+      right: 0;
+      overflow: hidden;
+      padding: 1rem;
+    }
+
+    .sections-container {
+      height: 100%;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 1rem;
+      display: none;
+      background: transparent;
+    }
+    .section.active {
+      display: block;
+    }
+
+    .nav-item {
+      transition: all 0.3s ease-in-out;
+      color: #64748b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .nav-item.active {
+      color: var(--color-logo-green); /* Changed to logo green */
+      font-weight: 600;
+      transform: translateY(-4px);
+    }
+
+    .content-card {
+      background-color: #ffffff;
+      border-radius: 1.5rem;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .section-content {
+      min-height: calc(100% - 2rem);
+      display: flex;
+      flex-direction: column;
+    }
+
+    #marqueeContainer {
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      background-color: #FFFACD; /* Light gold background, e.g., Lemon Chiffon */
+      padding: 1rem;
+      border-radius: 1rem 1rem 0 0;
+    }
+    #marqueeText {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 15s linear infinite;
+      color: #B8860B; /* Darker gold text, e.g., DarkGoldenRod */
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    #androidTopNotification {
+      position: fixed;
+      top: 7rem;
+      left: 50%;
+      transform: translateY(-100%) translateX(-50%);
+      width: 90%;
+      max-width: 28rem;
+      background: #1f2937;
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 1rem;
+      text-align: center;
+      z-index: 9999;
+      opacity: 0;
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    }
+    #androidTopNotification.show {
+      transform: translateY(0) translateX(-50%);
+      opacity: 1;
+    }
+
+    #editModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1003;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    #editModal.show {
+      display: flex;
+      opacity: 1;
+    }
+    #editModal .modal-content {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      width: 90%;
+      max-width: 28rem;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    #editModal.show .modal-content {
+      transform: translateY(0);
+    }
+
+    #successPopup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(26, 82, 55, 0.95); /* Use a darker, semi-transparent primary green */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1002;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease-in-out;
+    }
+    #successPopup.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+   .checkmark-wrapper {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .checkmark {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: block;
+      stroke-width: 5;
+      stroke: var(--color-success);
+      stroke-miterlimit: 10;
+      box-shadow: inset 0 0 0 var(--color-success);
+      animation:
+        fill 0.4s ease-in-out 0.4s forwards,
+        scale 0.3s ease-in-out 0.9s both;
+    }
+
+    .checkmark-circle {
+      stroke-dasharray: 166;
+      stroke-dashoffset: 166;
+      stroke-width: 5;
+      stroke-miterlimit: 10;
+      stroke: var(--color-success);
+      fill: none;
+      animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+
+    .checkmark-check {
+      transform-origin: 50% 50%;
+      stroke-dasharray: 48;
+      stroke-dashoffset: 48;
+      animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    }
+
+    @keyframes stroke {
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes scale {
+      0%, 100% {
+        transform: none;
+      }
+      50% {
+        transform: scale3d(1.1, 1.1, 1);
+      }
+    }
+
+    @keyframes fill {
+      100% {
+        box-shadow: inset 0 0 0 100px rgba(16, 185, 129, 0.1);
+      }
+    }
+
+    .btn-primary {
+      background: linear-gradient(to right, var(--color-logo-blue), var(--color-logo-green)) !important; /* Changed to logo gradient */
+      color: white !important;
+      border-radius: 9999px !important;
+      padding: 0.75rem 2rem !important;
+      border: none !important;
+      font-weight: 600 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      transition: transform 0.2s !important;
+      width: 100% !important;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+    }
+    #inviteFriendsBtn {
+      background-color: var(--color-logo-gold) !important; /* Changed to logo gold */
+      color: #334155 !important;
+    }
+    .edit-payment-btn {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background-color: var(--color-logo-green); /* Changed to logo green */
+      color: white;
+      border: none;
+      border-radius: 9999px;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .edit-payment-btn:hover {
+      background-color: var(--color-logo-light-green); /* Changed to lighter logo green */
+      transform: translateY(-2px);
+    }
+    .edit-payment-btn i {
+      margin-right: 0.25rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .banner-img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 0 0 1rem 1rem;
+      background: linear-gradient(45deg, var(--color-logo-blue), var(--color-logo-green)); /* Changed to logo gradient */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+
+    .telegram-indicator {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #0088cc;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .telegram-connected {
+      position: fixed;
+      bottom: 6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0088cc;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      z-index: 1000;
+      display: none;
+    }
+
+    .profile-image {
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--color-logo-light-green); /* Changed to lighter logo green */
+      background-color: #E6FFE6; /* Very light green */
+    }
+
+    .profile-placeholder {
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid var(--color-logo-light-green); /* Changed to lighter logo green */
+      background-color: #E6FFE6; /* Very light green */
+      font-size: 4rem;
+      color: var(--color-logo-green); /* Changed to logo green */
+    }
+
+    .profile-header-image {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 12px;
+      border: 2px solid #C1E1C1; /* Lighter green */
+    }
+
+    .profile-header-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #E6FFE6; /* Very light green */
+      color: var(--color-logo-green); /* Changed to logo green */
+      font-size: 1.5rem;
+      margin-right: 12px;
+      border: 2px solid #C1E1C1; /* Lighter green */
+    }
+
+    .validation-error {
+      color: #ef4444;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    /* Country flag styles */
+    .country-flag {
+      margin-left: 8px;
+      font-size: 1.5rem;
+      vertical-align: middle;
+    }
+
+    /* Firebase loading indicator */
+    .firebase-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .firebase-loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--color-logo-blue); /* Changed to logo blue */
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    /* Profile ID display */
+    .profile-id {
+      font-family: monospace;
+      background-color: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    /* Withdrawal history table styles */
+    .withdrawal-history-container {
+      background-color: #ffffff;
+      border-radius: 1.5rem;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
+
+    .withdrawal-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .withdrawal-history-table th,
+    .withdrawal-history-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .withdrawal-history-table th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .withdrawal-history-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-pending {
+      background-color: #fef3c7;
+      color: #92400e;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .status-approved {
+      background-color: #d1fae5;
+      color: #065f46;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .status-rejected {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* New styles for history button */
+    .history-btn {
+      background-color: var(--color-logo-green); /* Changed to logo green */
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+    }
+    .history-btn:hover {
+      background-color: var(--color-logo-light-green); /* Changed to lighter logo green */
+      transform: translateY(-2px);
+    }
+    .history-btn i {
+      margin-right: 0.25rem;
+    }
+
+    .withdraw-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    /* Added styles for content cards with hardcoded gradients */
+    /* Total Earnings card in Home section */
+    .content-card.bg-gradient-to-br.from-purple-600.to-indigo-700 {
+        background: linear-gradient(to bottom right, var(--color-logo-blue), var(--color-logo-green)); /* Changed to logo gradient */
+    }
+
+    /* Ads Watched card in Home section */
+    .content-card.bg-gradient-to-br.from-gray-800.to-gray-900 {
+        background: linear-gradient(to bottom right, var(--color-logo-gold), var(--color-logo-orange)); /* Changed to gold/orange gradient */
+    }
+    /* Icon inside Ads Watched card if needed adjustment for color */
+    .content-card.bg-gradient-to-br.from-gray-800.to-gray-900 .bg-white.p-3.rounded-full.text-gray-800 {
+        color: var(--color-logo-gold); /* Change icon color to match gold */
+    }
+
+    /* Profile Total Earnings card */
+    .content-card.bg-gradient-to-br.from-blue-500.to-cyan-500 {
+        background: linear-gradient(to bottom right, var(--color-logo-blue), var(--color-logo-green)); /* Changed to logo gradient */
+    }
+
+    /* Profile Ads Watched card */
+    .content-card.bg-gradient-to-br.from-red-500.to-orange-500 {
+        background: linear-gradient(to bottom right, var(--color-logo-gold), var(--color-logo-orange)); /* Changed to gold/orange gradient */
+    }
+
+    /* Specific color for the progress bar in Earn section */
+    #earn-progress-bar {
+        background-color: var(--color-logo-green) !important; /* Changed to logo green */
+    }
+
+    /* New styles for balance card in profile */
+    .balance-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem;
+      background: linear-gradient(to right, var(--color-logo-blue), var(--color-logo-green));
+      color: white;
+      border-radius: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .balance-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .balance-amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .withdraw-btn {
+      background-color: var(--color-logo-gold);
+      color: #334155;
+      border: none;
+      border-radius: 9999px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .withdraw-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Back button in withdraw section */
+    .back-button {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: none;
+      border: none;
+      color: var(--color-logo-blue);
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    /* New styles for maintenance mode popup */
+    #maintenancePopup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 1rem;
+    }
+    .maintenance-content {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 28rem;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .maintenance-icon {
+      font-size: 3rem;
+      color: #f59e0b;
+      margin-bottom: 1rem;
+    }
+    .maintenance-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+    .maintenance-message {
+      font-size: 1rem;
+      color: #4b5563;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .maintenance-time {
+      font-size: 0.9rem;
+      color: #6b7280;
+      font-style: italic;
+      margin-bottom: 1.5rem;
+    }
+    .maintenance-btn {
+      padding: 0.75rem 2rem;
+      background: linear-gradient(to right, var(--color-logo-blue), var(--color-logo-green));
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .maintenance-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Telegram warning popup */
+    #telegramWarningPopup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      padding: 1rem;
+    }
+    .telegram-warning-content {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      max-width: 28rem;
+      text-align: center;
+    }
+    .telegram-warning-icon {
+      font-size: 3rem;
+      color: #ef4444;
+      margin-bottom: 1rem;
+    }
+    .telegram-warning-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+    .telegram-warning-message {
+      font-size: 1rem;
+      color: #4b5563;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .telegram-warning-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+    .telegram-warning-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .telegram-warning-btn-ok {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+    }
+    .telegram-warning-btn-ok:hover {
+      background-color: #2563eb;
+    }
+    .telegram-warning-btn-go {
+      background-color: #10b981;
+      color: white;
+      border: none;
+    }
+    .telegram-warning-btn-go:hover {
+      background-color: #059669;
+    }
+
+    /* Penalty warning styles */
+    .penalty-warning {
+      color: #ef4444;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background-color: #fee2e2;
+      border-radius: 0.5rem;
+      display: none;
+    }
+
+    /* Penalty timer styles */
+    .penalty-timer {
+      color: #ef4444;
+      font-weight: 600;
+    }
+
+    /* New styles for penalty warning card */
+    .penalty-warning-card {
+      border: 2px solid #ef4444;
+      background-color: #fef2f2;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-top: 1rem;
+      display: none;
+    }
+    .penalty-warning-title {
+      color: #dc2626;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+    }
+    .penalty-warning-title i {
+      margin-right: 0.5rem;
+    }
+    .penalty-warning-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0.5rem 0;
+    }
+    .penalty-warning-list li {
+      padding: 0.25rem 0;
+      color: #7f1d1d;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: flex-start;
+    }
+    .penalty-warning-list li i {
+      margin-right: 0.5rem;
+      color: #ef4444;
+      margin-top: 0.25rem;
+    }
+    .details-link {
+      color: #3b82f6;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      display: inline-block;
+    }
+
+    /* Instructions popup styles */
+    #instructionsPopup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1004;
+      padding: 1rem;
+    }
+    #instructionsPopup.show {
+      display: flex;
+    }
+    .instructions-content {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      max-width: 32rem;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .close-instructions {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .instructions-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .instructions-list {
+      margin-bottom: 1.5rem;
+    }
+    .instructions-item {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+      position: relative;
+    }
+    .instructions-item-title {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+    .instructions-item-desc {
+      color: #4b5563;
+      font-size: 0.9375rem;
+    }
+    .instructions-item::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--color-logo-green);
+      font-weight: bold;
+    }
+    .instructions-close-btn {
+      background-color: var(--color-logo-blue);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.2s;
+    }
+    .instructions-close-btn:hover {
+      background-color: #1e40af;
+    }
+
+    /* App info card styles */
+    .app-info-card {
+      border-top: 1px solid #e5e7eb;
+      margin-top: 1rem;
+      padding-top: 1rem;
+    }
+    .app-info-title {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.75rem;
+      text-align: center;
+    }
+    .app-info-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+    .app-info-label {
+      color: #6b7280;
+    }
+    .app-info-value {
+      color: #374151;
+      font-weight: 500;
+    }
+    .app-info-link {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+    .app-info-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Penalty button styles */
+    .btn-penalty {
+      background: linear-gradient(to right, #ef4444, #dc2626) !important;
+      color: white !important;
+      cursor: not-allowed !important;
+    }
+    .btn-penalty:hover {
+      transform: none !important;
+    }
+    
+    /* ========== ADDED FEATURES FROM user adds.html ========== */
+    
+    /* Extra Earnings Box (Gift Theme) */
+    .extra-earn-card {
+        background: linear-gradient(135deg, #FF6B6B 0%, #FFD93D 100%);
+        border: 2px solid #FFD700;
+        position: relative;
+        overflow: hidden;
+    }
+    .gift-icon {
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        font-size: 3rem;
+        color: rgba(255, 255, 255, 0.3);
+        transform: rotate(-15deg);
+    }
+    .extra-earn-btn {
+        background: #fff !important;
+        color: #FF4757 !important;
+        font-weight: 800 !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+    }
+
+    /* Ad Overlay/Popup for Extra Earnings */
+    #adOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+    }
+    .ad-header {
+        height: 60px;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        color: white;
+    }
+    .ad-timer-text {
+        font-size: 0.9rem;
+        color: #fbbf24;
+        font-weight: bold;
+    }
+    .close-ad-btn {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid white;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.2rem;
+        opacity: 0.5;
+        pointer-events: none;
+        transition: all 0.3s;
+    }
+    .close-ad-btn.active {
+        background: #ef4444;
+        border-color: #ef4444;
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .ad-content-area {
+        flex: 1;
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .ad-footer {
+        height: 50px;
+        background: rgba(0,0,0,0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0 20px;
+    }
+    .ad-message {
+        text-align: center;
+        color: white;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+    .ad-progress-bg {
+        width: 100%;
+        height: 6px;
+        background: #333;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .ad-progress-bar {
+        height: 100%;
+        width: 0%;
+        background: #10b981;
+        transition: width 1s linear;
+    }
+    
+    /* Iframe Styling for Adsterra Smartlink/Banner */
+    .ad-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    /* Dynamic Payment Styles */
+    .payment-field-group { margin-bottom: 1rem; }
+    .payment-label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+    .payment-input { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f9fafb; }
+    .validation-error { color: #ef4444; font-size: 0.75rem; display: none; }
+    
+    /* Dynamic Payment Edit Modal */
+    #dynamicPaymentEditModal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1003;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+    #dynamicPaymentEditModal.show {
+        display: flex;
+        opacity: 1;
+    }
+    #dynamicPaymentEditModal .modal-content {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        width: 90%;
+        max-width: 28rem;
+        max-height: 80vh;
+        overflow-y: auto;
+        transform: translateY(20px);
+        transition: transform 0.3s ease;
+    }
+    #dynamicPaymentEditModal.show .modal-content {
+        transform: translateY(0);
+    }
+</style>
+</head>
+<body class="flex flex-col min-h-screen" oncontextmenu="return false;">
+
+  <!-- Maintenance Mode Popup -->
+  <div id="maintenancePopup" style="display: none;">
+    <div class="maintenance-content">
+      <div class="maintenance-icon">
+        <i class="fas fa-tools"></i>
+      </div>
+      <h2 class="maintenance-title">Under Maintenance</h2>
+      <p class="maintenance-message">
+        The app is currently undergoing maintenance to improve your experience. 
+        We'll be back online as soon as possible.
+      </p>
+      <p class="maintenance-time" id="maintenanceTime">
+        Maintenance started: Just now
+      </p>
+      <button id="refreshMaintenanceBtn" class="maintenance-btn">
+        <i class="fas fa-sync-alt mr-2"></i> Refresh Page
+      </button>
+    </div>
+  </div>
+  
+  <!-- Ad Overlay for Extra Earnings (Added from user adds.html) -->
+  <div id="adOverlay">
+    <div class="ad-header">
+        <div id="adHeaderTimer" class="ad-timer-text">Wait: 15s</div>
+        <button id="closeAdBtn" class="close-ad-btn">&times;</button>
+    </div>
+    <div id="adContainer" class="ad-content-area">
+        <!-- Ad will be injected here -->
+    </div>
+    <div class="ad-footer">
+        <div id="adFooterMessage" class="ad-message">Watch ad to earn double reward!</div>
+        <div class="ad-progress-bg">
+            <div id="adProgressBar" class="ad-progress-bar"></div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Firebase Loading Indicator -->
+  <div class="firebase-loading" id="firebaseLoading">
+    <div class="firebase-loading-spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Telegram Warning Popup (shown when Telegram user not detected) -->
+  <div id="telegramWarningPopup" style="display: none;">
+    <div class="telegram-warning-content">
+      <div class="telegram-warning-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h2 class="telegram-warning-title">User Not Found</h2>
+      <p class="telegram-warning-message">
+        Telegram user not detected. Please go to the bot and press or type /start to run the bot properly. 
+        Otherwise, your progress will not be saved. Close this mini app and launch it from the bot.
+      </p>
+      <div class="telegram-warning-buttons">
+        <button id="telegramWarningOk" class="telegram-warning-btn telegram-warning-btn-ok">OK, Continue</button>
+        <button id="telegramWarningGo" class="telegram-warning-btn telegram-warning-btn-go">Go to Bot</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instructions Popup -->
+  <div id="instructionsPopup">
+    <div class="instructions-content">
+      <button class="close-instructions" id="closeInstructions">&times;</button>
+      <h2 class="instructions-title">App Instructions</h2>
+      
+      <div class="instructions-list">
+        <div class="instructions-item">
+          <div class="instructions-item-title">Ad Watching Rules</div>
+          <div class="instructions-item-desc">
+            Watch ads for the full <span id="instructionAdDuration">15</span> seconds to earn rewards. Closing ads early will result in penalties.
+          </div>
+        </div>
+        
+        <div class="instructions-item">
+          <div class="instructions-item-title">Earning System</div>
+          <div class="instructions-item-desc">
+            Each completed ad earns you <span id="instructionEarningsPerAd">0.05</span> BDT. Complete your daily tasks to maximize earnings.
+          </div>
+        </div>
+        
+        <div class="instructions-item">
+          <div class="instructions-item-title">Penalty System</div>
+          <div class="instructions-item-desc">
+            Closing ads early will block the ad button for <span id="instructionPenaltyDuration">2</span> minutes. Repeated violations may lead to account restrictions.
+          </div>
+        </div>
+        
+        <div class="instructions-item">
+          <div class="instructions-item-title">Withdrawal Process</div>
+          <div class="instructions-item-desc">
+            Minimum withdrawal is <span id="instructionMinWithdrawal">100</span> BDT. Set up your payment information in the Profile section before requesting a withdrawal.
+          </div>
+        </div>
+        
+        <div class="instructions-item">
+          <div class="instructions-item-title">Account Security</div>
+          <div class="instructions-item-desc">
+            Your account is linked to your Telegram ID. Make sure to use the bot from the same Telegram account to avoid issues.
+          </div>
+        </div>
+        
+        <div class="instructions-item">
+          <div class="instructions-item-title">Support</div>
+          <div class="instructions-item-desc">
+            For issues or questions, contact us through our official Telegram group or the bot developer.
+          </div>
+        </div>
+      </div>
+      
+      <button class="instructions-close-btn" id="instructionsCloseBtn">Got It, Close</button>
+    </div>
+  </div>
+  
+  <!-- Dynamic Payment Edit Modal (Added from user adds.html) -->
+  <div id="dynamicPaymentEditModal">
+    <div class="modal-content">
+      <button id="closeDynamicPaymentModal" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+      <h2 class="text-2xl font-bold text-gray-800 mb-5 text-center">Edit Payment Information</h2>
+      
+      <div id="dynamicPaymentForm" class="space-y-4">
+        <!-- Dynamic payment fields will be inserted here -->
+      </div>
+      
+      <button id="saveDynamicPaymentBtn" class="btn-primary w-full mt-8 py-3">
+        Save Payment Information
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+  <div id="androidTopNotification" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-2 w-11/12 max-w-md bg-gray-800 text-white text-sm font-medium text-center px-4 py-3 rounded-xl shadow-lg z-[9999]">
+    <!-- Notification message appears here -->
+  </div>
+
+  <!-- Telegram Connection Indicator -->
+  <div class="telegram-connected" id="telegramConnected">
+    <i class="fab fa-telegram mr-2"></i>Connected to Telegram
+  </div>
+
+  <!-- Success Popup -->
+  <div id="successPopup" class="fixed inset-0 flex items-center justify-center z-[1002] hidden">
+    <div class="bg-white p-8 rounded-2xl text-center max-w-xs mx-auto">
+      <div class="checkmark-wrapper">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+          <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-800">Success!</h3>
+      <p id="successMessage" class="text-gray-600 mt-2">Operation completed successfully</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="fixed-top-header p-4 flex items-center justify-between shadow-lg rounded-b-xl">
+    <div class="flex items-center space-x-3">
+      <div class="relative">
+        <div id="headerProfileImage" class="profile-header-placeholder">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="telegram-indicator" id="telegramIndicator" style="display: none;">
+          <i class="fab fa-telegram"></i>
+        </div>
+      </div>
+      <div class="flex flex-col">
+        <span id="header-username" class="text-gray-800 text-base font-medium">@User</span>
+        <span id="header-balance" class="text-gray-600 text-sm opacity-90">BDT 0.00</span>
+      </div>
+    </div>
+    <div class="text-gray-800 font-semibold text-lg flex items-center">
+      AdVault
+      <span id="country-flag" class="country-flag"></span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow p-4 pt-20 pb-20 space-y-6 container mx-auto">
+    <!-- Home Section -->
+    <div id="home-section" class="section active">
+      <div class="content-card mb-6 overflow-hidden">
+        <div id="marqueeContainer" class="bg-yellow-50 p-4 rounded-t-2xl">
+          <div id="marqueeText" class="text-sm font-semibold text-yellow-800">
+            🔔  AdVault $ Bot Made by Fahim  🔔 
+          </div>
+        </div>
+        <div class="banner-img">AdVault 💸 Earnings</div>
+      </div>
+
+      <div class="content-card mb-6 text-center">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Welcome to AdVault</h2>
+        <p class="text-gray-600 mb-6">Start maximizing your ad revenue today!</p>
+        <button id="earnNowBtn" class="btn-primary py-3 px-8 w-full">
+          <i class="fas fa-play-circle mr-2"></i> Start Earning
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="content-card bg-gradient-to-br from-purple-600 to-indigo-700 text-white">
+          <div class="flex items-center space-x-4">
+            <div class="bg-white p-3 rounded-full text-purple-700 shadow-md">
+              <i class="fas fa-dollar-sign text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-3xl font-bold" id="home-earnings-val">BDT 0.00</p>
+              <p class="text-sm opacity-90">Total Earnings</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-card bg-gradient-to-br from-gray-800 to-gray-900 text-white">
+          <div class="flex items-center space-x-4">
+            <div class="bg-white p-3 rounded-full text-gray-800 shadow-md">
+              <i class="fas fa-eye text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-3xl font-bold" id="home-ads-val">0</p>
+              <p class="text-sm opacity-90">Ads Watched</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Earn Section -->
+    <div id="earn-section" class="section">
+      <h1 class="text-center text-3xl font-bold text-gray-800 mb-6">Earn Rewards</h1>
+      <div class="content-card mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Today's Tasks Progress</h2>
+        <div class="flex justify-between items-center text-gray-600 mb-4">
+          <p>Total Tasks: <span class="font-medium text-gray-800" id="earn-total">1000</span></p>
+          <div>
+          <p>Completed: <span class="font-medium text-purple-600" id="earn-completed">0</span></p>
+          <p>Remaining: <span class="font-medium text-red-500" id="earn-remaining">1000</span></p>
+       </div> </div>
+        <div class="w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden">
+          <div id="earn-progress-bar" class="h-full rounded-full bg-purple-600" style="width: 0%;"></div>
+        </div>
+        
+        <!-- Earnings per ad display -->
+        <div class="text-center mb-4 p-2 bg-blue-50 rounded-lg">
+          <p class="text-sm text-gray-700">
+            Earnings per ad: <span class="font-bold text-blue-700" id="earningsPerAdDisplay">0.05</span> BDT
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
+            Each ad requires <span id="adDurationDisplay">15</span> seconds to complete
+          </p>
+        </div>
+        
+        <button id="startEarningAd" class="btn-primary py-3 px-6 w-full">
+          <span id="adButtonText">Start Ad Task</span>
+        </button>
+        
+        <!-- Penalty warning card -->
+        <div id="penaltyWarningCard" class="penalty-warning-card">
+          <div class="penalty-warning-title">
+            <i class="fas fa-exclamation-triangle"></i>
+            Warning: Ad Closed Too Early
+          </div>
+          <ul class="penalty-warning-list">
+            <li><i class="fas fa-ban"></i> Do not close ads before the time over (<span id="penaltyAdDuration">15</span> seconds)</li>
+            <li><i class="fas fa-user-slash"></i> Quick closes harm your account reputation</li>
+            <li><i class="fas fa-money-bill-wave"></i> You will not get paid for quick closes</li>
+            <li><i class="fas fa-clock"></i> Button blocked for <span id="penaltyDurationDisplay">2</span> minutes as penalty</li>
+          </ul>
+          <span class="details-link" id="showInstructions">Details &gt;&gt;</span>
+        </div>
+      </div>
+      
+      <!-- Extra Earnings Card (Added from user adds.html) -->
+      <div class="content-card extra-earn-card mb-6">
+        <i class="fas fa-gift gift-icon"></i>
+        <div class="relative z-10 text-center text-white">
+            <h2 class="text-xl font-bold mb-1">🎁 Premium Task</h2>
+            <p class="text-sm mb-3 opacity-90">Watch premium ad for 2x Earnings!</p>
+            <button id="startExtraAdBtn" class="btn-primary extra-earn-btn">
+                CLAIM BONUS REWARD
+            </button>
+        </div>
+      </div>
+
+      <div class="content-card mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Refer & Earn More</h2>
+        <p class="text-gray-600 mb-6">Invite your friends and earn bonuses!</p>
+        <div class="text-gray-600 mb-6">
+          <p>Your Referral Link: <span class="text-blue-500 break-all">Coming Soon</span></p>
+          <p class="mt-2">Total Referrals: <span class="font-medium text-gray-800">0</span></p>
+        </div>
+        <button id="inviteFriendsBtn" class="bg-yellow-400 text-gray-800 py-3 px-6 w-full rounded-full font-semibold">
+          Share Invite Link
+        </button>
+      </div>
+    </div>
+
+    <!-- Withdraw Section -->
+    <div id="withdraw-section" class="section">
+      <button class="back-button" onclick="showSection('profile-section')">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1 class="text-center text-3xl font-bold text-gray-800 mb-6">Withdraw Funds</h1>
+      <div class="content-card w-full max-w-md mx-auto">
+        <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-800">Available Balance</h2>
+          <p class="text-2xl font-bold text-purple-600" id="withdraw-balance">BDT 0.00</p>
+        </div>
+
+        <div class="withdraw-header mb-5">
+          <h2 class="text-xl font-semibold text-purple-600">Request Payout</h2>
+          <button id="viewWithdrawalHistoryBtn" class="history-btn">
+            <i class="fas fa-history mr-1"></i> History
+          </button>
+        </div>
+        
+        <form id="withdrawForm" class="space-y-6">
+          <div>
+            <label class="block text-gray-700 text-sm font-medium mb-2">Withdrawal Method</label>
+            <select id="withdrawalMethod" class="block w-full p-3 border border-gray-300 rounded-lg">
+              <option value="">Select a method</option>
+              <!-- Dynamic payment methods will be inserted here -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 text-sm font-medium mb-2">Amount (BDT)</label>
+            <input type="number" id="amount" placeholder="Min 100 BDT" 
+                   class="block w-full p-3 border border-gray-300 rounded-lg"
+                   min="100" step="0.01">
+            <p class="text-xs text-gray-500 mt-1" id="minWithdrawalText">Minimum withdrawal: 100 BDT</p>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 text-sm font-medium mb-2">Payout Address</label>
+            <input type="text" id="withdrawalAddress" readonly
+                   class="block w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                   onclick="showEditNotification()">
+            <p class="text-xs text-red-500 mt-1 hidden" id="paymentDetailsMissing">Details not set. Go to Profile to edit.</p>
+          </div>
+
+          <button type="submit" class="btn-primary py-3 px-6 w-full">
+            Submit Withdrawal Request
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Withdrawal History Section -->
+    <div id="withdrawal-history-section" class="section">
+      <button class="back-button" onclick="showSection('withdraw-section')">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1 class="text-center text-3xl font-bold text-gray-800 mb-6">Withdrawal History</h1>
+      
+      <div class="withdrawal-history-container">
+        <table class="withdrawal-history-table">
+          <thead>
+            <tr>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="withdrawal-history-body">
+            <tr>
+              <td colspan="4" class="text-center py-4 text-gray-500">Loading your withdrawal history...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div id="profile-section" class="section">
+      <h1 class="text-center text-3xl font-bold text-gray-800 mb-6">Your Profile</h1>
+
+      <div class="content-card w-full max-w-md mx-auto text-center mb-6">
+        <div class="w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-4 relative">
+          <div id="profileImageContainer">
+            <!-- Profile image will be inserted here -->
+          </div>
+        </div>
+
+        <div class="space-y-2 mb-4">
+          <h2 class="text-xl font-semibold text-gray-800" id="profile-name">Full Name</h2>
+          <p class="text-gray-600" id="profile-username">@Username</p>
+          <p class="text-gray-600 text-sm">ID: <span class="profile-id" id="profile-id">123456789</span></p>
+        </div>
+        
+        <div class="mt-4 text-sm text-gray-500">
+          <p id="profile-source">Account created via: Web</p>
+        </div>
+      </div>
+
+      <!-- New Balance Card with Withdraw Button -->
+      <div class="balance-card w-full max-w-md mx-auto">
+        <div>
+          <div class="balance-text">Your Balance</div>
+          <div class="balance-amount" id="profile-balance">BDT 0.00</div>
+        </div>
+        <button class="withdraw-btn" onclick="showSection('withdraw-section')">
+          <i class="fas fa-wallet mr-2"></i> Withdraw
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-2 gap-4 w-full max-w-md mx-auto">
+        <div class="content-card bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-center">
+          <h3 class="text-xl font-medium mb-2">Total Earnings</h3>
+          <p class="text-2xl font-bold" id="profile-earnings">BDT 0.00</p>
+        </div>
+
+        <div class="content-card bg-gradient-to-br from-red-500 to-orange-500 text-white text-center">
+          <h3 class="text-xl font-medium mb-2">Ads Watched</h3>
+          <p class="text-3xl font-bold">
+            <i class="fas fa-ad mr-2"></i><span id="profile-ads">0</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="content-card w-full max-w-md mx-auto mt-6 relative">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-gray-800">Payment Information</h3>
+          <button id="editDynamicPaymentBtn" class="edit-payment-btn">
+            <i class="fas fa-edit mr-1"></i> Edit
+          </button>
+        </div>
+        
+        <div id="dynamicPaymentDetailsDisplay" class="space-y-3 text-gray-700 text-sm">
+          <!-- Dynamic payment details will be inserted here -->
+          <p class="text-center text-gray-400 italic">Loading payment methods...</p>
+        </div>
+      </div>
+      
+      <!-- App Info Card -->
+      <div class="content-card w-full max-w-md mx-auto app-info-card">
+        <h3 class="app-info-title">App Information</h3>
+        <div class="app-info-item">
+          <span class="app-info-label">App Name:</span>
+          <span class="app-info-value">AdVault Earnings</span>
+        </div>
+        <div class="app-info-item">
+          <span class="app-info-label">Version:</span>
+          <span class="app-info-value">2.1.1</span>
+        </div>
+        <div class="app-info-item">
+          <span class="app-info-label">Official Group:</span>
+          <a href="https://t.me/AdVault_Group" target="_blank" class="app-info-value app-info-link">AdVault Official</a>
+        </div>
+        <div class="app-info-item">
+          <span class="app-info-label">Developer:</span>
+          <a href="https://t.me/Monetag_SupportBot" target="_blank" class="app-info-value app-info-link">MT Support</a>
+        </div>
+        <div class="app-info-item">
+          <span class="app-info-label">Build Number:</span>
+          <span class="app-info-value" id="build-number">AV20250902</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Payment Information Modal (Original) -->
+    <div id="editModal">
+      <div class="modal-content">
+        <button id="closeEditModal" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+        <h2 class="text-2xl font-bold text-gray-800 mb-5 text-center">Edit Payment Information</h2>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">PayPal Email</label>
+            <input id="editPaypal" type="email" placeholder="e.g. paypal@example.com" class="w-full p-3 border border-gray-300 rounded-lg">
+            <div id="paypalError" class="validation-error">Please enter a valid PayPal email</div>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Payoneer Email</label>
+            <input id="editPayoneer" type="email" placeholder="e.g. payoneer@example.com" class="w-full p-3 border border-gray-300 rounded-lg">
+            <div id="payoneerError" class="validation-error">Please enter a valid Payoneer email</div>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">bKash Number</label>
+            <div class="flex border border-gray-300 rounded-lg">
+              <span class="inline-flex items-center px-3 rounded-l-lg bg-gray-100 text-gray-600 text-sm">+88</span>
+              <input id="editBkash" type="text" placeholder="01XXXXXXXXX" maxlength="11"
+                     class="w-full p-3 rounded-r-lg text-gray-700">
+            </div>
+            <div id="bkashError" class="validation-error">Please enter a valid bKash number (e.g. 017XXXXXXXX or +88017XXXXXXXX)</div>
+          </div>
+        </div>
+
+        <button id="saveProfileBtn" class="btn-primary w-full mt-8 py-3">
+          Save Payment Information
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed-bottom-nav p-3 rounded-t-3xl shadow-2xl">
+    <ul class="flex justify-around items-center h-full">
+      <li class="nav-item flex flex-col items-center text-center text-xs font-medium active" data-target="home-section">
+        <i class="fas fa-home text-xl mb-1"></i><span>Home</span>
+      </li>
+      <li class="nav-item flex flex-col items-center text-center text-xs font-medium" data-target="earn-section">
+        <i class="fas fa-coins text-xl mb-1"></i><span>Earn</span>
+      </li>
+      <li class="nav-item flex flex-col items-center text-center text-xs font-medium" data-target="profile-section">
+        <i class="fas fa-user-circle text-xl mb-1"></i><span>Profile</span>
+      </li>
+    </ul>
+  </nav>
+
+<script>
+    // Firebase configuration AdVault s1
+    
+    const firebaseConfig = {
+  apiKey: "AIzaSyB3HVFRch3p3fXpK2oAMbONg9NLoKssnqk",
+  authDomain: "adbot-s1.firebaseapp.com",
+  projectId: "adbot-s1",
+  storageBucket: "adbot-s1.firebasestorage.app",
+  messagingSenderId: "24458241388",
+  appId: "1:24458241388:web:c6e8a8a742508cc0a1bf49"
+};
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    // Collection name for users
+    const USERS_COLLECTION = "adv2_users";
+    // Collection name for withdrawals
+    const WITHDRAWALS_COLLECTION = "adv2_withdrawals";
+    // Admin settings document ID
+    const ADMIN_SETTINGS_DOC_ID = "_admin_settings_";
+    const SETTINGS_DOC = "_admin_settings_"; // For compatibility with added features
+    
+    // User data
+    let userData = {
+      id: "",           // Telegram ID
+      name: "",         // Full name
+      username: "",     // Telegram username
+      balance: 0.00,
+      totalEarnings: 0.00,
+      adsWatched: 0,
+      completedTasks: 0,
+      totalTasks: 1000,
+      paypal: "",
+      payoneer: "",
+      bkash: "",
+      lastResetDate: new Date().toISOString().slice(0, 10),
+      telegramDetected: false,
+      source: "web",    // web or telegram
+      profilePhoto: null,
+      totalWithdrawn: 0.00,
+      withdrawalCount: 0,
+      paymentInfo: {} // ADDED: For dynamic payment methods
+    };
+
+    // Admin settings (loaded from Firestore) - Extended with new features
+    let adminSettings = {
+      maintenanceMode: false,
+      autoApprove: false,
+      enablePenalty: true,
+      minWithdrawal: 100,
+      earningsPerAd: 0.05,
+      dailyTasks: 1000,
+      adDuration: 15,
+      penaltyDuration: 2,
+      lastUpdated: new Date().toISOString(),
+      
+      // ADDED FEATURES FROM user adds.html
+      paymentMethods: [], // [{id, name, type}]
+      marqueeSettings: { default: "Welcome to AdVault!" },
+      adServices: [] // [{type, code, active}]
+    };
+
+    // Country data
+    let userCountry = "BD"; // Default to Bangladesh
+
+    // Penalty system variables
+    let penaltyActive = false;
+    let penaltyEndTime = 0;
+    let penaltyInterval = null;
+    let adStartTime = 0;
+    let adTimerInterval = null;
+
+    // Maintenance mode variables
+    let maintenanceMode = false;
+    let maintenanceStartTime = null;
+    
+    // ADDED: Extra earnings ad popup variables
+    let adInterval;
+
+    // ===================== FIREBASE FUNCTIONS =====================
+    
+    // Save user data to Firestore
+    async function saveUserData() {
+      try {
+        userData.lastUpdated = firebase.firestore.FieldValue.serverTimestamp();
+        const userId = userData.id || userData.username;
+        await db.collection(USERS_COLLECTION).doc(userId).set(userData, { merge: true });
+        console.log("User data saved to Firestore");
+        return true;
+      } catch (error) {
+        console.error("Error saving user data:", error);
+        showTopNotification("Failed to save data. Please try again.");
+        return false;
+      }
+    }
+    
+    // Load user data from Firestore
+    async function loadUserData(userId) {
+      try {
+        const doc = await db.collection(USERS_COLLECTION).doc(userId).get();
+        if (doc.exists) {
+          // Found existing user
+          const data = doc.data();
+          
+          // Merge with default data to ensure all fields exist
+          userData = {
+            ...userData,
+            ...data
+          };
+          
+          // Ensure paymentInfo exists
+          if (!userData.paymentInfo) userData.paymentInfo = {};
+          
+          console.log("User data loaded from Firestore");
+          return true;
+        } else {
+          // Create new user with admin settings applied
+          userData.totalTasks = adminSettings.dailyTasks || 1000;
+          userData.paymentInfo = {}; // Initialize empty paymentInfo
+          console.log("Creating new user in Firestore");
+          await saveUserData();
+          return false;
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        showTopNotification("Failed to load data. Please try again.");
+        return false;
+      } finally {
+        // Hide loading indicator
+        document.getElementById("firebaseLoading").style.display = "none";
+      }
+    }
+    
+    // Load admin settings from Firestore
+    async function loadAdminSettings() {
+      try {
+        const doc = await db.collection(USERS_COLLECTION).doc(ADMIN_SETTINGS_DOC_ID).get();
+        if (doc.exists) {
+          const data = doc.data();
+          adminSettings = {
+            ...adminSettings,
+            ...data
+          };
+          
+          // Update maintenance mode
+          maintenanceMode = adminSettings.maintenanceMode || false;
+          if (maintenanceMode) {
+            maintenanceStartTime = adminSettings.lastUpdated || new Date().toISOString();
+            showMaintenancePopup();
+          }
+          
+          console.log("Admin settings loaded:", adminSettings);
+          
+          // Apply admin settings to UI
+          applyAdminSettings();
+          
+          // ADDED: Initialize dynamic features
+          renderMarquee();
+          renderDynamicPaymentUI();
+          
+          return true;
+        } else {
+          console.log("No admin settings found, using defaults.");
+          return false;
+        }
+      } catch (error) {
+        console.error("Error loading admin settings:", error);
+        return false;
+      }
+    }
+    
+    // Set up real-time listener for admin settings
+    function setupAdminSettingsListener() {
+      db.collection(USERS_COLLECTION).doc(ADMIN_SETTINGS_DOC_ID)
+        .onSnapshot((doc) => {
+          if (doc.exists) {
+            const data = doc.data();
+            adminSettings = {
+              ...adminSettings,
+              ...data
+            };
+            
+            console.log("Admin settings updated in real-time:", adminSettings);
+            
+            // Update maintenance mode
+            const wasInMaintenance = maintenanceMode;
+            maintenanceMode = adminSettings.maintenanceMode || false;
+            
+            if (maintenanceMode && !wasInMaintenance) {
+              maintenanceStartTime = adminSettings.lastUpdated || new Date().toISOString();
+              showMaintenancePopup();
+            } else if (!maintenanceMode && wasInMaintenance) {
+              hideMaintenancePopup();
+            }
+            
+            // Apply updated settings
+            applyAdminSettings();
+            
+            // ADDED: Update dynamic features
+            renderMarquee();
+            renderDynamicPaymentUI();
+            
+            // Show notification for settings change
+            if (userData.telegramDetected) {
+              showTopNotification("App settings have been updated", 3000);
+            }
+          }
+        }, (error) => {
+          console.error("Error listening to admin settings:", error);
+        });
+    }
+    
+    // Apply admin settings to the app
+    function applyAdminSettings() {
+      // Update user data with admin settings
+      userData.totalTasks = adminSettings.dailyTasks || 1000;
+      
+      // Update UI elements
+      if (document.getElementById('earn-total')) {
+        document.getElementById('earn-total').textContent = adminSettings.dailyTasks || 1000;
+      }
+      
+      if (document.getElementById('earningsPerAdDisplay')) {
+        document.getElementById('earningsPerAdDisplay').textContent = (adminSettings.earningsPerAd || 0.05).toFixed(2);
+      }
+      
+      if (document.getElementById('adDurationDisplay')) {
+        document.getElementById('adDurationDisplay').textContent = adminSettings.adDuration || 15;
+      }
+      
+      if (document.getElementById('penaltyAdDuration')) {
+        document.getElementById('penaltyAdDuration').textContent = adminSettings.adDuration || 15;
+      }
+      
+      if (document.getElementById('penaltyDurationDisplay')) {
+        document.getElementById('penaltyDurationDisplay').textContent = adminSettings.penaltyDuration || 2;
+      }
+      
+      if (document.getElementById('amount')) {
+        document.getElementById('amount').min = adminSettings.minWithdrawal || 100;
+        document.getElementById('amount').placeholder = `Min ${adminSettings.minWithdrawal || 100} BDT`;
+      }
+      
+      if (document.getElementById('minWithdrawalText')) {
+        document.getElementById('minWithdrawalText').textContent = `Minimum withdrawal: ${adminSettings.minWithdrawal || 100} BDT`;
+      }
+      
+      // Update instructions popup
+      if (document.getElementById('instructionAdDuration')) {
+        document.getElementById('instructionAdDuration').textContent = adminSettings.adDuration || 15;
+      }
+      
+      if (document.getElementById('instructionEarningsPerAd')) {
+        document.getElementById('instructionEarningsPerAd').textContent = (adminSettings.earningsPerAd || 0.05).toFixed(2);
+      }
+      
+      if (document.getElementById('instructionPenaltyDuration')) {
+        document.getElementById('instructionPenaltyDuration').textContent = adminSettings.penaltyDuration || 2;
+      }
+      
+      if (document.getElementById('instructionMinWithdrawal')) {
+        document.getElementById('instructionMinWithdrawal').textContent = adminSettings.minWithdrawal || 100;
+      }
+      
+      // Update penalty system if enabled/disabled
+      const penaltyEnabled = adminSettings.enablePenalty !== false;
+      const penaltyWarningCard = document.getElementById('penaltyWarningCard');
+      if (penaltyWarningCard) {
+        if (!penaltyEnabled) {
+          penaltyWarningCard.style.display = 'none';
+        }
+      }
+      
+      // Update UI
+      updateUI();
+    }
+    
+    // Show maintenance popup
+    function showMaintenancePopup() {
+      const popup = document.getElementById('maintenancePopup');
+      if (popup) {
+        if (maintenanceStartTime) {
+          const time = new Date(maintenanceStartTime).toLocaleString();
+          document.getElementById('maintenanceTime').textContent = `Maintenance started: ${time}`;
+        }
+        popup.style.display = 'flex';
+        
+        // Disable all interactive elements
+        document.querySelectorAll('button, input, select').forEach(el => {
+          if (el.id !== 'refreshMaintenanceBtn') {
+            el.disabled = true;
+          }
+        });
+      }
+    }
+    
+    // Hide maintenance popup
+    function hideMaintenancePopup() {
+      const popup = document.getElementById('maintenancePopup');
+      if (popup) {
+        popup.style.display = 'none';
+        
+        // Re-enable all interactive elements
+        document.querySelectorAll('button, input, select').forEach(el => {
+          el.disabled = false;
+        });
+        
+        showTopNotification("App is back online!", 3000);
+      }
+    }
+    
+    // Save withdrawal request to Firestore
+    async function saveWithdrawalRequest(amount, method, address) {
+      try {
+        const withdrawalData = {
+          userId: userData.id || userData.username,
+          username: userData.username,
+          amount: amount,
+          method: method,
+          address: address,
+          timestamp: new Date().toISOString(),
+          status: "pending"
+        };
+
+        await db.collection(WITHDRAWALS_COLLECTION).add(withdrawalData);
+        console.log("Withdrawal request saved successfully");
+        return true;
+      } catch (error) {
+        console.error("Error saving withdrawal request:", error);
+        return false;
+      }
+    }
+
+    // Fetch user's withdrawal history
+    async function fetchWithdrawalHistory() {
+      const userId = userData.id || userData.username;
+      if (!userId) {
+        document.getElementById("withdrawal-history-body").innerHTML = 
+          '<tr><td colspan="4" class="text-center py-4 text-red-500">User not identified</td></tr>';
+        return;
+      }
+
+      try {
+        // Show loading state
+        document.getElementById("withdrawal-history-body").innerHTML = 
+          '<tr><td colspan="4" class="text-center py-4 text-gray-500">Loading your withdrawal history...</td></tr>';
+
+        const querySnapshot = await db.collection(WITHDRAWALS_COLLECTION)
+          .where("userId", "==", userId)
+          .orderBy("timestamp", "desc")
+          .get();
+
+        const tbody = document.getElementById("withdrawal-history-body");
+        tbody.innerHTML = "";
+
+        if (querySnapshot.empty) {
+          tbody.innerHTML = 
+            '<tr><td colspan="4" class="text-center py-4 text-gray-500">No withdrawal history found</td></tr>';
+          return;
+        }
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const date = new Date(data.timestamp).toLocaleDateString();
+          
+          // Determine status class
+          let statusClass = "status-pending";
+          if (data.status === "completed") statusClass = "status-approved";
+          if (data.status === "rejected") statusClass = "status-rejected";
+          
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td class="font-medium">BDT ${data.amount?.toFixed(2) || '0.00'}</td>
+            <td>${data.method || 'N/A'}</td>
+            <td><span class="${statusClass}">${data.status || 'pending'}</span></td>
+            <td class="text-gray-500 text-sm">${date}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error("Error fetching withdrawal history:", error);
+        document.getElementById("withdrawal-history-body").innerHTML = 
+          '<tr><td colspan="4" class="text-center py-4 text-red-500">Error loading history: ' + error.message + '</td></tr>';
+      }
+    }
+    
+    // ===================== END FIREBASE FUNCTIONS =====================
+
+    // ===================== ADDED FEATURES FROM user adds.html =====================
+    
+    // --- Feature 1: Dynamic Marquee ---
+    function renderMarquee() {
+        const text = adminSettings.marqueeSettings[userCountry] || adminSettings.marqueeSettings['default'] || "Welcome to AdVault!";
+        document.getElementById('marqueeText').textContent = text;
+        // Adjust speed
+        document.getElementById('marqueeText').style.animationDuration = `${Math.max(10, text.length / 5)}s`;
+    }
+
+    // --- Feature 2: Dynamic Payment Methods ---
+    function renderDynamicPaymentUI() {
+        // 1. Profile Display
+        const displayContainer = document.getElementById('dynamicPaymentDetailsDisplay');
+        displayContainer.innerHTML = '';
+        
+        if (adminSettings.paymentMethods && adminSettings.paymentMethods.length > 0) {
+            adminSettings.paymentMethods.forEach(method => {
+                const val = userData.paymentInfo[method.id] || 'Not Set';
+                const div = document.createElement('div');
+                div.innerHTML = `<span class="font-bold">${method.name}:</span> <span class="${val === 'Not Set' ? 'text-red-500' : 'text-gray-900'}">${val}</span>`;
+                displayContainer.appendChild(div);
+            });
+        } else {
+            // Fallback to original payment methods
+            displayContainer.innerHTML = `
+                <p><span class="font-bold">PayPal:</span> <span class="${!userData.paypal ? 'text-red-500' : 'text-gray-900'}">${userData.paypal || 'Not set'}</span></p>
+                <p><span class="font-bold">Payoneer:</span> <span class="${!userData.payoneer ? 'text-red-500' : 'text-gray-900'}">${userData.payoneer || 'Not set'}</span></p>
+                <p><span class="font-bold">bKash:</span> <span class="${!userData.bkash ? 'text-red-500' : 'text-gray-900'}">${userData.bkash || 'Not set'}</span></p>
+            `;
+        }
+
+        // 2. Dynamic Edit Modal Form
+        const formContainer = document.getElementById('dynamicPaymentForm');
+        if (formContainer) {
+            formContainer.innerHTML = '';
+            
+            if (adminSettings.paymentMethods && adminSettings.paymentMethods.length > 0) {
+                adminSettings.paymentMethods.forEach(method => {
+                    const wrapper = document.createElement('div');
+                    const type = method.type === 'number' ? 'number' : (method.type === 'email' ? 'email' : 'text');
+                    wrapper.innerHTML = `
+                        <label class="payment-label">${method.name}</label>
+                        <input type="${type}" data-id="${method.id}" value="${userData.paymentInfo[method.id] || ''}" class="payment-input" placeholder="Enter ${method.name}">
+                    `;
+                    formContainer.appendChild(wrapper);
+                });
+            } else {
+                // Fallback to original form
+                formContainer.innerHTML = `
+                    <div>
+                        <label class="payment-label">PayPal Email</label>
+                        <input type="email" data-id="paypal" value="${userData.paypal || ''}" class="payment-input" placeholder="Enter PayPal email">
+                    </div>
+                    <div>
+                        <label class="payment-label">Payoneer Email</label>
+                        <input type="email" data-id="payoneer" value="${userData.payoneer || ''}" class="payment-input" placeholder="Enter Payoneer email">
+                    </div>
+                    <div>
+                        <label class="payment-label">bKash Number</label>
+                        <input type="text" data-id="bkash" value="${userData.bkash || ''}" class="payment-input" placeholder="Enter bKash number">
+                    </div>
+                `;
+            }
+        }
+
+        // 3. Withdraw Dropdown
+        const select = document.getElementById('withdrawalMethod');
+        if (select) {
+            select.innerHTML = '<option value="">Select Method</option>';
+            
+            if (adminSettings.paymentMethods && adminSettings.paymentMethods.length > 0) {
+                adminSettings.paymentMethods.forEach(method => {
+                    const opt = document.createElement('option');
+                    opt.value = method.id;
+                    opt.textContent = method.name;
+                    select.appendChild(opt);
+                });
+            } else {
+                // Fallback to original methods
+                const methods = [
+                    {id: 'paypal', name: 'PayPal'},
+                    {id: 'payoneer', name: 'Payoneer'},
+                    {id: 'bkash', name: 'bKash'}
+                ];
+                methods.forEach(method => {
+                    const opt = document.createElement('option');
+                    opt.value = method.id;
+                    opt.textContent = method.name;
+                    select.appendChild(opt);
+                });
+            }
+        }
+    }
+    
+    // Update payment address based on selected method
+    function updateDynamicPaymentAddress() {
+        const method = document.getElementById('withdrawalMethod')?.value;
+        const addressField = document.getElementById('withdrawalAddress');
+        const warning = document.getElementById('paymentDetailsMissing');
+        
+        if (!method || !addressField) return;
+        
+        if (adminSettings.paymentMethods && adminSettings.paymentMethods.length > 0) {
+            // Use dynamic payment info
+            const savedVal = userData.paymentInfo[method];
+            if (savedVal) {
+                addressField.value = savedVal;
+                if (warning) warning.classList.add('hidden');
+            } else {
+                addressField.value = '';
+                if (warning) warning.classList.remove('hidden');
+            }
+        } else {
+            // Fallback to original payment methods
+            addressField.value = 
+                method === 'paypal' ? userData.paypal || '' :
+                method === 'payoneer' ? userData.payoneer || '' :
+                method === 'bkash' ? userData.bkash || '' : '';
+                
+            if (warning) {
+                if (!addressField.value) {
+                    warning.classList.remove('hidden');
+                } else {
+                    warning.classList.add('hidden');
+                }
+            }
+        }
+    }
+    
+    // Save dynamic payment info
+    async function saveDynamicPaymentInfo() {
+        const inputs = document.querySelectorAll('#dynamicPaymentForm input');
+        const newInfo = {};
+        
+        inputs.forEach(input => {
+            const id = input.getAttribute('data-id');
+            if (input.value.trim()) newInfo[id] = input.value.trim();
+        });
+
+        userData.paymentInfo = newInfo;
+        
+        // Also update original payment fields for backward compatibility
+        if (newInfo.paypal) userData.paypal = newInfo.paypal;
+        if (newInfo.payoneer) userData.payoneer = newInfo.payoneer;
+        if (newInfo.bkash) userData.bkash = newInfo.bkash;
+        
+        // Save to Firestore
+        const btn = document.getElementById('saveDynamicPaymentBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+        
+        await db.collection(USERS_COLLECTION).doc(userData.id || userData.username).update({ 
+            paymentInfo: newInfo,
+            paypal: userData.paypal,
+            payoneer: userData.payoneer,
+            bkash: userData.bkash
+        });
+        
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+        renderDynamicPaymentUI();
+        updateUI();
+        document.getElementById('dynamicPaymentEditModal').classList.remove('show');
+        setTimeout(() => {
+            document.getElementById('dynamicPaymentEditModal').style.display = 'none';
+        }, 300);
+        showTopNotification("Payment information updated!");
+    }
+    
+    // --- Feature 3: Extra Earnings Ad Popup ---
+    function openExtraAdPopup() {
+        const adService = adminSettings.adServices?.find(s => s.active);
+        
+        if (!adService) {
+            showTopNotification("No premium ads available right now.");
+            return;
+        }
+
+        const adOverlay = document.getElementById('adOverlay');
+        const closeAdBtn = document.getElementById('closeAdBtn');
+        const adContainer = document.getElementById('adContainer');
+        const timerText = document.getElementById('adHeaderTimer');
+        const progressBar = document.getElementById('adProgressBar');
+        const msgText = document.getElementById('adFooterMessage');
+        
+        adOverlay.style.display = 'flex';
+        closeAdBtn.classList.remove('active');
+        closeAdBtn.innerHTML = "&times;";
+        adContainer.innerHTML = ''; // Clear previous
+        progressBar.style.width = '0%';
+        
+        // Inject Ad
+        injectAdScript(adService, adContainer);
+
+        // Timer Logic
+        let totalTime = 30; // 30 seconds total session
+        let closeEnableTime = 15; // Enable X after 15s
+        let elapsed = 0;
+
+        timerText.textContent = `Wait: ${closeEnableTime}s`;
+        msgText.textContent = "Sign up opportunities loading...";
+
+        clearInterval(adInterval);
+        adInterval = setInterval(() => {
+            elapsed++;
+            
+            // Progress Bar (mapped to close enable time)
+            let progress = (elapsed / closeEnableTime) * 100;
+            if (progress > 100) progress = 100;
+            progressBar.style.width = `${progress}%`;
+
+            // Text Updates
+            if (elapsed === 5) msgText.textContent = "Keep watching to earn double...";
+            if (elapsed === 10) msgText.textContent = "Almost there...";
+
+            // Close Button Enable
+            const remainingToClose = closeEnableTime - elapsed;
+            if (remainingToClose > 0) {
+                timerText.textContent = `Wait: ${remainingToClose}s`;
+            } else {
+                timerText.textContent = "Reward Ready";
+                if (!closeAdBtn.classList.contains('active')) {
+                    closeAdBtn.classList.add('active');
+                    msgText.textContent = "Click 'X' to claim reward!";
+                }
+            }
+
+            // Auto Close Safety (Total Time + 5s buffer)
+            if (elapsed >= totalTime + 5) {
+                closeExtraAdPopup(false);
+                clearInterval(adInterval);
+                adOverlay.style.display = 'none';
+            }
+
+        }, 1000);
+    }
+    
+    function injectAdScript(service, container) {
+        if (service.type === 'smartlink') {
+            // Use iframe for Smartlink/Direct Link to contain it within popup
+            const iframe = document.createElement('iframe');
+            iframe.src = service.code; // code should be the URL
+            iframe.className = 'ad-iframe';
+            container.appendChild(iframe);
+        } else if (service.type === 'banner' || service.type === 'native') {
+            // For script tags, we need to recreate them to execute
+            // NOTE: Adsterra scripts often use document.write which wipes the page.
+            // We must use a sandboxed iframe approach for safety or specific Adsterra placement divs.
+            
+            // Safe approach: Create a temporary iframe to render the script
+            const iframe = document.createElement('iframe');
+            iframe.className = 'ad-iframe';
+            iframe.style.background = 'white';
+            container.appendChild(iframe);
+            
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+                <style>body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;}</style>
+                ${service.code}
+            `);
+            doc.close();
+        }
+    }
+    
+    async function closeExtraAdPopup(reward) {
+        clearInterval(adInterval);
+        const adOverlay = document.getElementById('adOverlay');
+        adOverlay.style.display = 'none';
+        
+        if (reward) {
+            const bonus = (adminSettings.earningsPerAd || 0.05) * 2;
+            userData.balance += bonus;
+            userData.totalEarnings += bonus;
+            await db.collection(USERS_COLLECTION).doc(userData.id || userData.username).update({
+                balance: userData.balance,
+                totalEarnings: userData.totalEarnings
+            });
+            updateUI();
+            showSuccessPopup(`Bonus ${bonus.toFixed(2)} BDT Added!`);
+        }
+    }
+    
+    // ===================== END ADDED FEATURES =====================
+
+    // Telegram WebApp initialization
+    function initTelegram() {
+      return new Promise((resolve) => {
+        // Check if Telegram WebApp is already available
+        if (window.Telegram?.WebApp) {
+          Telegram.WebApp.ready();
+          Telegram.WebApp.expand();
+          resolve(true);
+          return;
+        }
+
+        // Create script element
+        const script = document.createElement('script');
+        script.src = 'https://telegram.org/js/telegram-web-app.js';
+        
+        script.onload = () => {
+          if (window.Telegram?.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        };
+        
+        script.onerror = () => {
+          resolve(false);
+        };
+        
+        document.head.appendChild(script);
+      });
+    }
+
+    // Get Telegram user data from WebApp
+    function getTelegramUserData() {
+      try {
+        // Check for initDataUnsafe first
+        if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+          const user = Telegram.WebApp.initDataUnsafe.user;
+          return {
+            id: user.id ? user.id.toString() : "",
+            name: [user.first_name, user.last_name].filter(Boolean).join(" "),
+            username: user.username ? `@${user.username}` : user.first_name,
+            photoUrl: user.photo_url || null
+          };
+        }
+        
+        // Check for initData string
+        if (window.Telegram?.WebApp?.initData) {
+          const params = new URLSearchParams(Telegram.WebApp.initData);
+          const userJson = params.get('user');
+          if (userJson) {
+            const user = JSON.parse(userJson);
+            return {
+              id: user.id ? user.id.toString() : "",
+              name: [user.first_name, user.last_name].filter(Boolean).join(" "),
+              username: user.username ? `@${user.username}` : user.first_name,
+              photoUrl: user.photo_url || null
+            };
+          }
+        }
+      } catch (e) {
+        console.error("Error getting Telegram user data:", e);
+      }
+      return null;
+    }
+
+    // Generate fallback username
+    function generateUsername() {
+      return `User${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    // Show notification when trying to edit payment info in withdraw section
+    function showEditNotification() {
+      const banner = document.getElementById("androidTopNotification");
+      if (!banner) return;
+      
+      banner.textContent = "To edit payment information, please go to the Profile section and use the Edit button";
+      banner.classList.add("show");
+      setTimeout(() => banner.classList.remove("show"), 3000);
+    }
+
+    // Validate email format
+    function isValidEmail(email) {
+      if (!email) return false;
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    // Validate bKash number format
+    function isValidBkash(number) {
+      if (!number) return false;
+      return /^(?:\+?88)?01[3-9]\d{8}$/.test(number);
+    }
+
+    // Show notification
+    function showTopNotification(message, duration = 3000) {
+      const banner = document.getElementById("androidTopNotification");
+      if (!banner) return;
+      
+      banner.textContent = message;
+      banner.classList.add("show");
+      setTimeout(() => banner.classList.remove("show"), duration);
+    }
+
+    // Show success popup
+    function showSuccessPopup(message = "Success!") {
+      const popup = document.getElementById("successPopup");
+      if (!popup) return;
+      
+      // Reset animations by briefly removing and re-adding the SVG
+      const checkmarkWrapper = popup.querySelector('.checkmark-wrapper');
+      if (checkmarkWrapper) {
+        const svg = checkmarkWrapper.innerHTML;
+        checkmarkWrapper.innerHTML = '';
+        setTimeout(() => {
+          checkmarkWrapper.innerHTML = svg;
+        }, 10);
+      }
+      
+      document.getElementById("successMessage").textContent = message;
+      popup.classList.remove("hidden");
+      popup.classList.add("show");
+      
+      setTimeout(() => {
+        popup.classList.remove("show");
+        setTimeout(() => {
+          popup.classList.add("hidden");
+        }, 300);
+      }, 2000);
+    }
+    
+    // Update UI with current data
+    function updateUI() {
+      // Update header
+      if (document.getElementById('header-username')) {
+        document.getElementById('header-username').textContent = userData.username;
+        document.getElementById('header-balance').textContent = `BDT ${userData.balance.toFixed(2)}`;
+      }
+
+      // Update home section
+      if (document.getElementById('home-earnings-val')) {
+        document.getElementById('home-earnings-val').textContent = `BDT ${userData.totalEarnings.toFixed(2)}`;
+        document.getElementById('home-ads-val').textContent = userData.adsWatched;
+      }
+
+      // Update earn section
+      if (document.getElementById('earn-completed')) {
+        const remaining = userData.totalTasks - userData.completedTasks;
+        document.getElementById('earn-completed').textContent = userData.completedTasks;
+        document.getElementById('earn-remaining').textContent = remaining;
+        document.getElementById('earn-progress-bar').style.width = `${(userData.completedTasks / userData.totalTasks) * 100}%`;
+      }
+
+      // Update withdraw section
+      if (document.getElementById('withdraw-balance')) {
+        document.getElementById('withdraw-balance').textContent = `BDT ${userData.balance.toFixed(2)}`;
+      }
+
+      // Update profile section
+      if (document.getElementById('profile-username')) {
+        document.getElementById('profile-name').textContent = userData.name || "Not available";
+        document.getElementById('profile-username').textContent = userData.username;
+        document.getElementById('profile-id').textContent = userData.id || "Not available";
+        document.getElementById('profile-balance').textContent = `BDT ${userData.balance.toFixed(2)}`;
+        document.getElementById('profile-earnings').textContent = `BDT ${userData.totalEarnings.toFixed(2)}`;
+        document.getElementById('profile-ads').textContent = userData.adsWatched;
+        document.getElementById('displayPaypal').textContent = userData.paypal || 'Not set';
+        document.getElementById('displayPayoneer').textContent = userData.payoneer || 'Not set';
+        document.getElementById('displayBkash').textContent = userData.bkash || 'Not set';
+        document.getElementById('profile-source').textContent = `Account created via: ${userData.source === 'telegram' ? 'Telegram' : 'Web'}`;
+      }
+      
+      // Update Telegram indicator
+      const telegramIndicator = document.getElementById('telegramIndicator');
+      if (telegramIndicator) {
+        telegramIndicator.style.display = userData.telegramDetected ? 'flex' : 'none';
+      }
+      
+      // Update profile images
+      updateProfileImages();
+    }
+    
+    // Update profile images with Telegram photo if available
+    function updateProfileImages() {
+      const profileContainer = document.getElementById('profileImageContainer');
+      const headerContainer = document.getElementById('headerProfileImage');
+      
+      if (!profileContainer || !headerContainer) return;
+      
+      // Clear existing content
+      profileContainer.innerHTML = '';
+      headerContainer.innerHTML = '';
+      
+      if (userData.profilePhoto) {
+        // Profile section image
+        const profileImg = document.createElement('img');
+        profileImg.src = userData.profilePhoto;
+        profileImg.alt = "Profile photo";
+        profileImg.className = "profile-image";
+        profileContainer.appendChild(profileImg);
+        
+        // Header image
+        const headerImg = document.createElement('img');
+        headerImg.src = userData.profilePhoto;
+        headerImg.alt = "Profile photo";
+        headerImg.className = "profile-header-image";
+        headerContainer.appendChild(headerImg);
+      } else {
+        // Profile section placeholder
+        const profilePlaceholder = document.createElement('div');
+        profilePlaceholder.className = "profile-placeholder";
+        profilePlaceholder.innerHTML = '<i class="fas fa-user"></i>';
+        profileContainer.appendChild(profilePlaceholder);
+        
+        // Header placeholder
+        const headerPlaceholder = document.createElement('div');
+        headerPlaceholder.className = "profile-header-placeholder";
+        headerPlaceholder.innerHTML = '<i class="fas fa-user"></i>';
+        headerContainer.appendChild(headerPlaceholder);
+      }
+    }
+
+    // Check for daily reset
+    function checkDailyReset() {
+      const today = new Date().toISOString().slice(0, 10);
+      if (userData.lastResetDate !== today) {
+        userData.completedTasks = 0;
+        userData.lastResetDate = today;
+        saveUserData();
+      }
+    }
+
+    // Show specific section
+    function showSection(targetId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      
+      const targetSection = document.getElementById(targetId);
+      const targetNavItem = document.querySelector(`.nav-item[data-target="${targetId}"]`);
+      
+      if (targetSection) targetSection.classList.add('active');
+      if (targetNavItem) targetNavItem.classList.add('active');
+    }
+
+    // Load ad SDK with timeout
+    async function loadAdSDK() {
+      return new Promise((resolve, reject) => {
+        if (typeof show_9661177 === 'function') {
+          resolve();
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://libtl.com/sdk.js';
+        
+        // Timeout handling
+        const timeout = setTimeout(() => {
+          reject(new Error('Ad SDK loading timed out'));
+          script.remove();
+        }, 15000); // 15 seconds timeout
+
+        script.onload = () => {
+          clearTimeout(timeout);
+          if (typeof show_9661177 === 'function') {
+            resolve();
+          } else {
+            reject(new Error('Ad SDK function not found'));
+          }
+        };
+
+        script.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Failed to load ad SDK'));
+        };
+
+        document.head.appendChild(script);
+      });
+    }
+    
+    // Detect user's country using IP
+    async function detectCountry() {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        return data.country;
+      } catch (error) {
+        console.error('Country detection failed:', error);
+        return 'BD'; // Default to Bangladesh
+      }
+    }
+    
+    // Set country flag based on country code
+    function setCountryFlag(country) {
+      const flagElement = document.getElementById('country-flag');
+      if (!flagElement) return;
+      
+      // Map of country codes to flag emojis
+      const flagMap = {
+        'BD': '🇧🇩', // Bangladesh
+        'US': '🇺🇸', // United States
+        'GB': '🇬🇧', // United Kingdom
+        'CA': '🇨🇦', // Canada
+        'AU': '🇦🇺', // Australia
+        'IN': '🇮🇳', // India
+        'PK': '🇵🇰', // Pakistan
+        'SA': '🇸🇦', // Saudi Arabia
+        'AE': '🇦🇪', // UAE
+        'SG': '🇸🇬', // Singapore
+        'MY': '🇲🇾', // Malaysia
+        'ID': '🇮🇩', // Indonesia
+        'JP': '🇯🇵', // Japan
+        'KR': '🇰🇷', // South Korea
+        'CN': '🇨🇳', // China
+        'DE': '🇩🇪', // Germany
+        'FR': '🇫🇷', // France
+        'IT': '🇮🇹', // Italy
+        'ES': '🇪🇸', // Spain
+        'BR': '🇧🇷', // Brazil
+        'RU': '🇷🇺', // Russia
+        'ZA': '🇿🇦'  // South Africa
+      };
+      
+      flagElement.textContent = flagMap[country] || '';
+    }
+
+    // Penalty system functions
+    function applyPenalty() {
+      const penaltyEnabled = adminSettings.enablePenalty !== false;
+      if (!penaltyEnabled) return;
+      
+      penaltyActive = true;
+      penaltyEndTime = Date.now() + (adminSettings.penaltyDuration || 2) * 60000; // Use admin settings
+      
+      // Save penalty to localStorage
+      localStorage.setItem('penaltyEndTime', penaltyEndTime.toString());
+      
+      // Update button state
+      const startEarningAd = document.getElementById('startEarningAd');
+      if (startEarningAd) {
+        startEarningAd.disabled = true;
+        startEarningAd.classList.add('btn-penalty');
+      }
+      
+      // Show warning card
+      const penaltyWarningCard = document.getElementById('penaltyWarningCard');
+      if (penaltyWarningCard) {
+        penaltyWarningCard.style.display = 'block';
+      }
+      
+      // Start penalty timer
+      penaltyInterval = setInterval(updatePenaltyTimer, 1000);
+      updatePenaltyTimer();
+    }
+    
+    function updatePenaltyTimer() {
+      const now = Date.now();
+      const remaining = Math.max(0, penaltyEndTime - now);
+      
+      if (remaining <= 0) {
+        clearPenalty();
+        return;
+      }
+      
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      
+      // Update button text
+      const adButtonText = document.getElementById('adButtonText');
+      if (adButtonText) {
+        adButtonText.innerHTML = `Wait ${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }
+    }
+    
+    function clearPenalty() {
+      penaltyActive = false;
+      clearInterval(penaltyInterval);
+      
+      // Remove penalty from localStorage
+      localStorage.removeItem('penaltyEndTime');
+      
+      // Reset button state
+      const startEarningAd = document.getElementById('startEarningAd');
+      const adButtonText = document.getElementById('adButtonText');
+      if (startEarningAd && adButtonText) {
+        startEarningAd.disabled = false;
+        startEarningAd.classList.remove('btn-penalty');
+        adButtonText.textContent = 'Start Ad Task';
+      }
+      
+      // Hide warning card
+      const penaltyWarningCard = document.getElementById('penaltyWarningCard');
+      if (penaltyWarningCard) {
+        penaltyWarningCard.style.display = 'none';
+      }
+    }
+    
+    // Check for existing penalty on page load
+    function checkExistingPenalty() {
+      const savedPenaltyEndTime = localStorage.getItem('penaltyEndTime');
+      if (savedPenaltyEndTime) {
+        const remaining = parseInt(savedPenaltyEndTime) - Date.now();
+        if (remaining > 0) {
+          penaltyEndTime = parseInt(savedPenaltyEndTime);
+          applyPenalty();
+        } else {
+          localStorage.removeItem('penaltyEndTime');
+        }
+      }
+    }
+    
+    // Start ad timer (to track if user closes ad early)
+    function startAdTimer() {
+      adStartTime = Date.now();
+      clearInterval(adTimerInterval);
+      
+      adTimerInterval = setInterval(() => {
+        const elapsed = Date.now() - adStartTime;
+        if (elapsed >= (adminSettings.adDuration || 15) * 1000) { // Use admin settings
+          clearInterval(adTimerInterval);
+        }
+      }, 1000);
+    }
+    
+    // Check if ad was closed early
+    function checkAdCompletion() {
+      const elapsed = Date.now() - adStartTime;
+      clearInterval(adTimerInterval);
+      
+      const requiredDuration = (adminSettings.adDuration || 15) * 1000; // Use admin settings
+      if (elapsed < requiredDuration) { // Closed before required duration
+        applyPenalty();
+        showTopNotification(`Warning: Please watch ads for full ${adminSettings.adDuration || 15} seconds to earn rewards`, 5000);
+        return false;
+      }
+      return true;
+    }
+
+    // Show instructions popup
+    function showInstructionsPopup() {
+      const popup = document.getElementById('instructionsPopup');
+      if (popup) {
+        popup.style.display = 'flex';
+      }
+    }
+
+    // Hide instructions popup
+    function hideInstructionsPopup() {
+      const popup = document.getElementById('instructionsPopup');
+      if (popup) {
+        popup.style.display = 'none';
+      }
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Navigation
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => showSection(item.dataset.target));
+      });
+
+      // Earn Now button
+      const earnNowBtn = document.getElementById('earnNowBtn');
+      if (earnNowBtn) {
+        earnNowBtn.addEventListener('click', () => showSection('earn-section'));
+      }
+
+      // Start Ad Task button
+      const startEarningAd = document.getElementById('startEarningAd');
+      const adButtonText = document.getElementById('adButtonText');
+      if (startEarningAd) {
+        startEarningAd.addEventListener('click', async () => {
+          // Check maintenance mode
+          if (maintenanceMode) {
+            showTopNotification('App is under maintenance. Please try again later.');
+            return;
+          }
+          
+          if (penaltyActive) {
+            showTopNotification('Please wait until the penalty timer expires to continue');
+            return;
+          }
+          
+          if (userData.completedTasks >= userData.totalTasks) {
+            showTopNotification('All tasks completed for today!');
+            return;
+          }
+
+          // Show loading state
+          startEarningAd.disabled = true;
+          adButtonText.innerHTML = '<div class="spinner"></div> Loading ad...';
+          
+          try {
+            // Load the ad SDK
+            await loadAdSDK();
+            
+            // Start ad timer
+            startAdTimer();
+            
+            // Show the ad and wait for completion
+            await show_9661177();
+            
+            // Check if ad was completed properly
+            if (!checkAdCompletion()) {
+              return;
+            }
+            
+            // Credit user after successful ad view
+            const earnings = adminSettings.earningsPerAd || 0.05; // Use admin settings
+            userData.balance += earnings;
+            userData.totalEarnings += earnings;
+            userData.adsWatched++;
+            userData.completedTasks++;
+            
+            // Save to Firestore
+            await saveUserData();
+            updateUI();
+            
+            // Show notification
+            showTopNotification(`Earned ${earnings.toFixed(2)} BDT!`);
+            
+          } catch (error) {
+            console.error("Ad error:", error);
+            showTopNotification('Ad failed: ' + error.message);
+          } finally {
+            // Reset button state if not in penalty
+            if (!penaltyActive) {
+              startEarningAd.disabled = false;
+              adButtonText.textContent = 'Start Ad Task';
+            }
+          }
+        });
+      }
+      
+      // ADDED: Extra earnings ad button
+      const startExtraAdBtn = document.getElementById('startExtraAdBtn');
+      if (startExtraAdBtn) {
+        startExtraAdBtn.addEventListener('click', () => {
+          // Check maintenance mode
+          if (maintenanceMode) {
+            showTopNotification('App is under maintenance. Please try again later.');
+            return;
+          }
+          
+          if (penaltyActive) {
+            showTopNotification('Please wait until the penalty timer expires to continue');
+            return;
+          }
+          
+          openExtraAdPopup();
+        });
+      }
+      
+      // ADDED: Close ad button for extra earnings
+      const closeAdBtn = document.getElementById('closeAdBtn');
+      if (closeAdBtn) {
+        closeAdBtn.addEventListener('click', () => {
+          if (closeAdBtn.classList.contains('active')) {
+            closeExtraAdPopup(true);
+          }
+        });
+      }
+
+      // Withdraw form
+      const withdrawForm = document.getElementById('withdrawForm');
+      if (withdrawForm) {
+        withdrawForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          // Check maintenance mode
+          if (maintenanceMode) {
+            showTopNotification('App is under maintenance. Please try again later.');
+            return;
+          }
+          
+          const method = document.getElementById('withdrawalMethod').value;
+          const amount = parseFloat(document.getElementById('amount').value);
+          const address = document.getElementById('withdrawalAddress').value;
+          
+          if (!method || !amount || !address) {
+            showTopNotification('Please complete all fields');
+            return;
+          }
+          
+          const minWithdrawal = adminSettings.minWithdrawal || 100;
+          if (amount < minWithdrawal) {
+            showTopNotification(`Minimum withdrawal: ${minWithdrawal} BDT`);
+            return;
+          }
+          
+          if (amount > userData.balance) {
+            showTopNotification('Insufficient balance');
+            return;
+          }
+          
+          // Check if payment method is set
+          let paymentSet = false;
+          if (adminSettings.paymentMethods && adminSettings.paymentMethods.length > 0) {
+            paymentSet = !!userData.paymentInfo[method];
+          } else {
+            // Fallback to original check
+            paymentSet = !!userData[method];
+          }
+          
+          if (!paymentSet) {
+            showTopNotification(`Please set ${method} information in profile`);
+            return;
+          }
+          
+          try {
+            // Save withdrawal request to Firestore
+            const success = await saveWithdrawalRequest(amount, method, address);
+            
+            if (success) {
+              // Update user data
+              userData.balance -= amount;
+              userData.totalWithdrawn += amount;
+              userData.withdrawalCount++;
+              
+              // Save updated user data
+              await saveUserData();
+              
+              // Update UI and show success
+              updateUI();
+              showSuccessPopup('Withdrawal requested successfully!');
+              withdrawForm.reset();
+              updateDynamicPaymentAddress();
+            } else {
+              showTopNotification('Failed to save withdrawal request. Please try again.');
+            }
+          } catch (error) {
+            console.error("Withdrawal error:", error);
+            showTopNotification('An error occurred. Please try again.');
+          }
+        });
+      }
+
+      // Payment method selector
+      const withdrawalMethod = document.getElementById('withdrawalMethod');
+      if (withdrawalMethod) {
+        withdrawalMethod.addEventListener('change', updateDynamicPaymentAddress);
+      }
+
+      // Original Payment editing
+      const editPaymentBtn = document.getElementById('editPaymentBtn');
+      const modal = document.getElementById('editModal');
+      const closeModal = document.getElementById('closeEditModal');
+      const saveBtn = document.getElementById('saveProfileBtn');
+
+      if (editPaymentBtn && modal && closeModal && saveBtn) {
+        editPaymentBtn.addEventListener('click', () => {
+          // Check maintenance mode
+          if (maintenanceMode) {
+            showTopNotification('App is under maintenance. Please try again later.');
+            return;
+          }
+          
+          // Hide previous errors
+          document.querySelectorAll('.validation-error').forEach(el => {
+            el.style.display = 'none';
+          });
+          
+          // Fill form with current payment data
+          document.getElementById('editPaypal').value = userData.paypal || '';
+          document.getElementById('editPayoneer').value = userData.payoneer || '';
+          document.getElementById('editBkash').value = userData.bkash ? userData.bkash.replace('+88', '') : '';
+          
+          modal.style.display = 'flex';
+          setTimeout(() => {
+            modal.classList.add('show');
+          }, 10);
+        });
+
+        closeModal.addEventListener('click', () => {
+          modal.classList.remove('show');
+          setTimeout(() => {
+            modal.style.display = 'none';
+          }, 300);
+        });
+
+        saveBtn.addEventListener('click', async () => {
+          // Check maintenance mode
+          if (maintenanceMode) {
+            showTopNotification('App is under maintenance. Please try again later.');
+            return;
+          }
+          
+          // Hide previous errors
+          document.querySelectorAll('.validation-error').forEach(el => {
+            el.style.display = 'none';
+          });
+          
+          const paypal = document.getElementById('editPaypal').value.trim();
+          const payoneer = document.getElementById('editPayoneer').value.trim();
+          const bkashRaw = document.getElementById('editBkash').value.trim();
+          const bkash = bkashRaw ? `+88${bkashRaw}` : '';
+          
+          // Validate at least one payment method
+          if (!paypal && !payoneer && !bkashRaw) {
+            showTopNotification('Please add at least one payment method');
+            return;
+          }
+          
+          let hasError = false;
+          
+          // Validate payment methods
+          if (paypal && !isValidEmail(paypal)) {
+            document.getElementById('paypalError').style.display = 'block';
+            hasError = true;
+          }
+          
+          if (payoneer && !isValidEmail(payoneer)) {
+            document.getElementById('payoneerError').style.display = 'block';
+            hasError = true;
+          }
+          
+          // Validate bKash with FIXED regex
+          if (bkashRaw && !isValidBkash(bkashRaw)) {
+            document.getElementById('bkashError').style.display = 'block';
+            hasError = true;
+          }
+          
+          if (hasError) return;
+          
+          // Update payment data
+          userData.paypal = paypal;
+          userData.payoneer = payoneer;
+          userData.bkash = bkash;
+          
+          // Also update paymentInfo for dynamic compatibility
+          if (paypal) userData.paymentInfo.paypal = paypal;
+          if (payoneer) userData.paymentInfo.payoneer = payoneer;
+          if (bkash) userData.paymentInfo.bkash = bkash;
+          
+          // Save to Firestore
+          await saveUserData();
+          updateUI();
+          renderDynamicPaymentUI();
+          modal.classList.remove('show');
+          setTimeout(() => {
+            modal.style.display = 'none';
+          }, 300);
+          showSuccessPopup('Payment information saved!');
+        });
+      }
+      
+      // ADDED: Dynamic payment edit button
+      const editDynamicPaymentBtn = document.getElementById('editDynamicPaymentBtn');
+      const dynamicPaymentModal = document.getElementById('dynamicPaymentEditModal');
+      const closeDynamicPaymentModal = document.getElementById('closeDynamicPaymentModal');
+      const saveDynamicPaymentBtn = document.getElementById('saveDynamicPaymentBtn');
+      
+      if (editDynamicPaymentBtn && dynamicPaymentModal && closeDynamicPaymentModal && saveDynamicPaymentBtn) {
+        editDynamicPaymentBtn.addEventListener('click', () => {
+          // Check maintenance mode
+          if (maintenanceMode) {
+            showTopNotification('App is under maintenance. Please try again later.');
+            return;
+          }
+          
+          // Fill form with current payment data
+          renderDynamicPaymentUI();
+          
+          dynamicPaymentModal.style.display = 'flex';
+          setTimeout(() => {
+            dynamicPaymentModal.classList.add('show');
+          }, 10);
+        });
+
+        closeDynamicPaymentModal.addEventListener('click', () => {
+          dynamicPaymentModal.classList.remove('show');
+          setTimeout(() => {
+            dynamicPaymentModal.style.display = 'none';
+          }, 300);
+        });
+
+        saveDynamicPaymentBtn.addEventListener('click', async () => {
+          await saveDynamicPaymentInfo();
+        });
+      }
+
+      // Invite friends
+      const inviteFriendsBtn = document.getElementById('inviteFriendsBtn');
+      if (inviteFriendsBtn) {
+        inviteFriendsBtn.addEventListener('click', () => {
+          // Check maintenance mode
+          if (maintenanceMode) {
+            showTopNotification('App is under maintenance. Please try again later.');
+            return;
+          }
+          showTopNotification('Invite feature coming soon!');
+        });
+      }
+      
+      // View withdrawal history button
+      const viewWithdrawalHistoryBtn = document.getElementById('viewWithdrawalHistoryBtn');
+      if (viewWithdrawalHistoryBtn) {
+        viewWithdrawalHistoryBtn.addEventListener('click', () => {
+          // Check maintenance mode
+          if (maintenanceMode) {
+            showTopNotification('App is under maintenance. Please try again later.');
+            return;
+          }
+          showSection('withdrawal-history-section');
+          fetchWithdrawalHistory();
+        });
+      }
+      
+      // Telegram warning popup buttons
+      const telegramWarningOk = document.getElementById('telegramWarningOk');
+      const telegramWarningGo = document.getElementById('telegramWarningGo');
+      
+      if (telegramWarningOk) {
+        telegramWarningOk.addEventListener('click', () => {
+          document.getElementById('telegramWarningPopup').style.display = 'none';
+        });
+      }
+      
+      if (telegramWarningGo) {
+        telegramWarningGo.addEventListener('click', () => {
+          window.open('https://t.me/AdVault_2bot', '_blank');
+          document.getElementById('telegramWarningPopup').style.display = 'none';
+        });
+      }
+      
+      // Instructions popup buttons
+      const showInstructions = document.getElementById('showInstructions');
+      const closeInstructions = document.getElementById('closeInstructions');
+      const instructionsCloseBtn = document.getElementById('instructionsCloseBtn');
+      
+      if (showInstructions) {
+        showInstructions.addEventListener('click', showInstructionsPopup);
+      }
+      
+      if (closeInstructions) {
+        closeInstructions.addEventListener('click', hideInstructionsPopup);
+      }
+      
+      if (instructionsCloseBtn) {
+        instructionsCloseBtn.addEventListener('click', hideInstructionsPopup);
+      }
+      
+      // Maintenance popup refresh button
+      const refreshMaintenanceBtn = document.getElementById('refreshMaintenanceBtn');
+      if (refreshMaintenanceBtn) {
+        refreshMaintenanceBtn.addEventListener('click', () => {
+          location.reload();
+        });
+      }
+    }
+
+    // Initialize the app
+    async function initApp() {
+      // Show loading state
+      document.getElementById('header-username').textContent = "Loading...";
+      
+      // Check for existing penalty
+      checkExistingPenalty();
+      
+      // Load admin settings first
+      await loadAdminSettings();
+      
+      // Set up real-time listener for admin settings
+      setupAdminSettingsListener();
+      
+      // Initialize Telegram environment
+      const isTelegram = await initTelegram();
+      let telegramUserData = null;
+      let telegramDetected = false;
+      
+      if (isTelegram) {
+        // Try to get Telegram user data
+        telegramUserData = getTelegramUserData();
+        telegramDetected = !!telegramUserData;
+      }
+      
+      // Show warning popup if Telegram user not detected
+      if (!telegramDetected) {
+        document.getElementById('telegramWarningPopup').style.display = 'flex';
+      }
+      
+      if (telegramUserData) {
+        // Show Telegram connection indicator
+        document.getElementById('telegramConnected').style.display = 'block';
+        setTimeout(() => {
+          document.getElementById('telegramConnected').style.display = 'none';
+        }, 3000);
+        
+        // Update user data with Telegram info
+        userData.id = telegramUserData.id;
+        userData.name = telegramUserData.name;
+        userData.username = telegramUserData.username;
+        userData.telegramDetected = true;
+        userData.source = "telegram";
+        
+        // Store profile photo if available
+        if (telegramUserData.photoUrl) {
+          userData.profilePhoto = telegramUserData.photoUrl;
+        }
+        
+        // Show welcome message
+        showTopNotification(`Welcome ${telegramUserData.username}!`);
+        
+        // Load user data by Telegram ID
+        await loadUserData(userData.id);
+      }
+      
+      // If we don't have a username yet (non-Telegram user), generate one
+      if (!userData.username) {
+        userData.username = generateUsername();
+        userData.source = "web";
+        // Load user data by username
+        await loadUserData(userData.username);
+      }
+      
+      // Update UI with loaded data
+      updateUI();
+      
+      // Detect country
+      userCountry = await detectCountry();
+      
+      // Set country flag
+      setCountryFlag(userCountry);
+      
+      // Complete initialization
+      checkDailyReset();
+      setupEventListeners();
+      showSection('home-section');
+    }
+
+    // Start the app
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
