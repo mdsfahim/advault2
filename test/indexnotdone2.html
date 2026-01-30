@@ -6373,13 +6373,16 @@ function dismissDroid(element, animClass) {
     
     function updateProfileImages() {
         const profileContainer = document.getElementById('profileImageContainer'); 
-        const headerContainer = document.getElementById('headerProfileImage'); // This ID is now on the inner wrapper
+        const headerContainer = document.getElementById('headerProfileImage'); 
         
         if (!profileContainer || !headerContainer) return;
         
-        // 2. Clear current content
+        // 1. Clear current content
         profileContainer.innerHTML = '';
         headerContainer.innerHTML = '';
+        
+        // 2. CRITICAL FIX: Reset to base class to ensure circle shape is restored
+        headerContainer.className = "avatar-img-wrapper"; 
         
         // 3. Logic: Check if user has a photo
         if (userData.profilePhoto) {
@@ -6396,25 +6399,25 @@ function dismissDroid(element, animClass) {
             const headerImg = document.createElement('img');
             headerImg.src = userData.profilePhoto;
             headerImg.alt = "Profile";
-            headerImg.className = "w-full h-full object-cover"; // Fits inside the new avatar-circle
+            // Added rounded-full to image as a backup
+            headerImg.className = "w-full h-full object-cover rounded-full"; 
             headerContainer.appendChild(headerImg);
 
         } else {
             // --- USER HAS NO PHOTO (SHOW PLACEHOLDERS) ---
             
-          // A. Main Profile Page Placeholder
+            // A. Main Profile Page Placeholder
             const profilePlaceholder = document.createElement('div');
             profilePlaceholder.className = "w-full h-full rounded-full flex items-center justify-center";
-            // CHANGED: text-white -> text-gray-300
             profilePlaceholder.innerHTML = '<i class="fas fa-user text-gray-300 text-3xl"></i>';
             profileContainer.appendChild(profilePlaceholder);
             
             // B. Header Placeholder (Astronaut)
-            headerContainer.className = "w-full h-full flex items-center justify-center";
+            // FIX: We append flex classes WITHOUT removing avatar-img-wrapper
+            headerContainer.className = "avatar-img-wrapper flex items-center justify-center";
             headerContainer.innerHTML = '<i class="fas fa-user-astronaut text-xl text-blue-500"></i>';
         }
     }
-            
 
     function checkDailyReset() {
         const today = new Date().toISOString().slice(0, 10);
