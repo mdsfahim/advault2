@@ -2331,7 +2331,29 @@
             </div>
         </div>
     </div>
+<div class="modal" id="rejectReasonModal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="modal-title" style="color: #dc2626;">
+                <i class="fas fa-exclamation-circle"></i> Reject Withdrawal
+            </h3>
+            <button class="close-modal" onclick="closeRejectModal()">&times;</button>
+        </div>
+        
+        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+            Please provide a reason for rejecting this request. This message will be sent to the user.
+        </p>
 
+        <div class="form-group">
+            <textarea id="rejectionReason" class="form-control" rows="3" placeholder="e.g. Invalid wallet number provided..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 1rem;">
+            <button class="btn" onclick="closeRejectModal()" style="flex: 1; background: #e2e8f0; color: #475569;">Cancel</button>
+            <button class="btn-primary" onclick="submitRejection()" style="flex: 1; background: #dc2626;">Confirm Rejection</button>
+        </div>
+    </div>
+</div>
     <!-- Firebase Configuration -->
     <script>
         // Firebase configuration
@@ -3628,15 +3650,22 @@ html += `
                 
                 // ... inside the loop in updateWithdrawalsTable ...
                 
+// ... inside updateWithdrawalsTable loop ...
+
+// 1. DEFINE THE ACCOUNT VALUE HERE
+const accountDetail = withdrawal.accountNumber || withdrawal.address || 'N/A';
+
 html += `
     <tr>
         <td style="font-family: monospace; font-size: 0.85rem;">${withdrawal.id.substring(0, 8)}...</td>
         <td>${withdrawal.username || 'N/A'}</td>
         <td style="font-weight: 600;">BDT ${withdrawal.amount?.toFixed(2) || '0.00'}</td>
         <td>${withdrawal.method || 'N/A'}</td>
+        
         <td style="font-family: monospace; font-size: 0.85rem;">
-            ${withdrawal.address ? withdrawal.address.substring(0, 20) + (withdrawal.address.length > 20 ? '...' : '') : 'N/A'}
+            ${accountDetail.substring(0, 20) + (accountDetail.length > 20 ? '...' : '')}
         </td>
+
         <td style="font-size: 0.85rem;">${date}</td>
         <td><span class="status-badge ${statusClass}">${withdrawal.status || 'pending'}</span></td>
         <td>
@@ -3917,94 +3946,177 @@ html += `
 
         // Process withdrawal - FIXED VERSION (no double deduction)
         // Process withdrawal - FIXED VERSION (Firebase Auth Compatible)
-async function processWithdrawal(withdrawalId, action) {
-    try {
-        // --- UI FEEDBACK START ---
-        // 1. Hide Table Buttons & Show Spinner
-        const rowBtns = document.getElementById(`row-btns-${withdrawalId}`);
-        const rowSpinner = document.getElementById(`row-spinner-${withdrawalId}`);
-        if (rowBtns) rowBtns.style.display = 'none';
-        if (rowSpinner) rowSpinner.style.display = 'flex';
+// ==========================================
+// WITHDRAWAL PROCESSING LOGIC (FIXED)
+// ==========================================
 
-        // 2. Hide Modal Buttons & Show Text (if modal is open)
-        const modalBtns = document.getElementById(`modal-btns-${withdrawalId}`);
-        if (modalBtns) {
-            modalBtns.innerHTML = `
-                <div style="width: 100%; text-align: center; padding: 1rem; background: #f1f5f9; border-radius: 10px; color: #64748b; font-weight: 500;">
-                    <i class="fas fa-circle-notch fa-spin mr-2"></i> Processing Request...
-                </div>
-            `;
+// 1. Global Variable to track which withdrawal we are rejecting
+let currentWithdrawalId = null;
+
+// 2. Entry Point: Triggered by Approve/Reject buttons in the table
+function processWithdrawal(withdrawalId, action) {
+    if (action === 'approve') {
+        if(confirm("Are you sure you want to approve this withdrawal?")) {
+            executeWithdrawalAction(withdrawalId, 'approve', null);
         }
-        // --- UI FEEDBACK END ---
-
-        console.log(`Processing withdrawal ${withdrawalId} with action: ${action}`);
+    } else if (action === 'reject') {
+        // Store the ID globally
+        currentWithdrawalId = withdrawalId;
+        console.log("Selected for rejection:", currentWithdrawalId); // Debugging
         
+        // Reset and show modal
+        document.getElementById('rejectionReason').value = ""; 
+        document.getElementById('rejectReasonModal').classList.add('show');
+    }
+}
+
+// 3. Triggered by 'Confirm Rejection' button in the Modal
+function submitRejection() {
+    const reason = document.getElementById('rejectionReason').value.trim();
+    
+    if (!reason) {
+        showToast("Please enter a rejection reason", "error");
+        return;
+    }
+
+    // CRITICAL FIX: Capture the ID *before* closing the modal
+    const idToProcess = currentWithdrawalId;
+    
+    if (!idToProcess) {
+        showToast("Error: Selection lost. Please try again.", "error");
+        closeRejectModal();
+        return;
+    }
+
+    // Now close the modal (which clears the global variable)
+    closeRejectModal();
+    
+    // Execute the action with the captured ID
+    executeWithdrawalAction(idToProcess, 'reject', reason);
+}
+
+// 4. Helper to Close Modal
+function closeRejectModal() {
+    document.getElementById('rejectReasonModal').classList.remove('show');
+    currentWithdrawalId = null; // Clear the global variable
+}
+
+// 5. Main Execution Function (Database & Notifications)
+async function executeWithdrawalAction(withdrawalId, action, reason) {
+    console.log(`Executing ${action} for ID: ${withdrawalId}`);
+
+    // UI Feedback: Toggle spinners
+    const rowBtns = document.getElementById(`row-btns-${withdrawalId}`);
+    const rowSpinner = document.getElementById(`row-spinner-${withdrawalId}`);
+    if (rowBtns) rowBtns.style.display = 'none';
+    if (rowSpinner) rowSpinner.style.display = 'flex';
+
+    try {
+        // Double check ID
+        if (!withdrawalId) throw new Error('Invalid Withdrawal ID');
+
+        // Find data locally
         const withdrawal = withdrawals.find(w => w.id === withdrawalId);
-        if (!withdrawal) {
-            showToast('Withdrawal not found!', 'error');
-            return;
-        }
+        if (!withdrawal) throw new Error('Withdrawal data not found. Please refresh page.');
 
         const newStatus = action === 'approve' ? 'completed' : 'rejected';
-        
-        // FIX: Use 'currentUser.email' instead of 'adminCredentials.username'
         const adminName = currentUser && currentUser.email ? currentUser.email : 'Admin';
 
-        // Update the withdrawal document
+        // --- A. Update Firestore Document ---
         await db.collection(WITHDRAWALS_COLLECTION).doc(withdrawalId).update({
             status: newStatus,
             processedAt: new Date().toISOString(),
-            processedBy: adminName // <--- This was the error source
+            processedBy: adminName,
+            adminNote: reason || "Processed by Admin"
         });
 
-        // If REJECTING, refund the user's balance
+        // --- B. Refund Balance (If Rejected) ---
         if (action === 'reject' && withdrawal.userId) {
-            try {
-                const userRef = db.collection(USERS_COLLECTION).doc(withdrawal.userId);
-                const userDoc = await userRef.get();
+            const userRef = db.collection(USERS_COLLECTION).doc(withdrawal.userId);
+            const userDoc = await userRef.get(); // Get fresh data
+            
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                // Ensure we handle numbers correctly
+                const currentBalance = parseFloat(userData.balance || 0);
+                const refundAmount = parseFloat(withdrawal.amount || 0);
                 
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    const currentBalance = userData.balance || 0;
-                    const refundedBalance = currentBalance + withdrawal.amount;
-                    
-                    await userRef.update({ 
-                        balance: refundedBalance,
-                        lastUpdated: new Date().toISOString()
-                    });
-                }
-            } catch (userError) {
-                console.error('Error refunding user:', userError);
+                await userRef.update({ 
+                    balance: currentBalance + refundAmount,
+                    lastUpdated: new Date().toISOString()
+                });
+                console.log(`Refunded ${refundAmount} to user.`);
             }
         }
-        
-        showToast(`Withdrawal ${newStatus} successfully!`, "success");
-        
-        // Close modal if open
-        const modal = document.getElementById('withdrawalModal');
-        if (modal && modal.classList.contains('show')) {
-            setTimeout(() => {
-                closeWithdrawalModal();
-            }, 500);
+
+        // --- C. Send Notifications ---
+        let notifTitle = "";
+        let notifMessage = "";
+
+        if (action === 'approve') {
+            notifTitle = "Withdrawal Approved ✅";
+            notifMessage = `Your withdrawal of BDT ${withdrawal.amount} has been verified. Payment is currently being processed.`;
+        } else {
+            notifTitle = "Withdrawal Rejected ❌";
+            notifMessage = `Your withdrawal was rejected and funds returned.\n\nReason: ${reason}`;
         }
 
-        // Refresh data
+        await sendPrivateNotification(withdrawal.userId, notifTitle, notifMessage);
+
+        showToast(`Withdrawal ${newStatus} successfully!`, "success");
+
+        // --- D. Cleanup & Refresh ---
+        closeWithdrawalModal(); // Close detail modal if open
+        
         setTimeout(async () => {
             await loadWithdrawals();
-            await loadUsers();
-            await loadDashboardData();
+            await loadDashboardData(); // Refresh top stats
             updateDashboardStats();
-            updateRecentActivity();
-            updateUsersTable();
-            updateWithdrawalsTable(); 
         }, 1000);
-        
+
     } catch (error) {
-        console.error("Error processing withdrawal:", error);
-        showToast(`Failed: ${error.message}`, 'error');
+        console.error("Processing Error:", error);
+        showToast(error.message, "error");
         
-        // If error, reload table to restore buttons
-        updateWithdrawalsTable();
+        // Restore buttons if it failed
+        if (rowBtns) rowBtns.style.display = 'flex';
+        if (rowSpinner) rowSpinner.style.display = 'none';
+    }
+}
+
+// 6. Notification Sender Helper
+async function sendPrivateNotification(userId, title, message) {
+    if (!userId) return;
+
+    try {
+        // 1. Add to In-App History
+        await db.collection('adv2_notifications').add({
+            // Only valid if your User App filters by this field. 
+            // If not, this will show to everyone. See note below.
+            targetUserId: userId, 
+            title: title,
+            message: message,
+            createdAt: new Date().toISOString(),
+            type: title.includes('Approved') ? 'success' : 'alert' 
+        });
+
+        // 2. Send Telegram Message
+        if (TELEGRAM_BOT_TOKEN && /^\d+$/.test(userId)) {
+            const telegramMsg = `🔔 *${title}*\n\n${message}`;
+            
+            // Fire and forget (don't await to keep UI fast)
+            fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    chat_id: userId,
+                    text: telegramMsg,
+                    parse_mode: 'Markdown'
+                })
+            }).catch(e => console.error("Telegram API Error:", e));
+        }
+    } catch (e) {
+        console.error("Notification Error:", e);
     }
 }
 
@@ -4022,71 +4134,52 @@ async function processWithdrawal(withdrawalId, action) {
                 const processedDate = withdrawal.processedAt ? 
                     new Date(withdrawal.processedAt).toLocaleString() : 'Not processed';
                 
-                details.innerHTML = `
-                    <div class="form-group">
-                        <label>Withdrawal ID</label>
-                        <input type="text" value="${withdrawal.id || 'N/A'}" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>User ID</label>
-                        <input type="text" value="${withdrawal.userId || 'N/A'}" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Username</label>
-                        <input type="text" value="${withdrawal.username || 'N/A'}" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" value="${withdrawal.name || 'N/A'}" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Amount</label>
-                        <input type="text" value="BDT ${withdrawal.amount?.toFixed(2) || '0.00'}" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Method</label>
-                        <input type="text" value="${withdrawal.method || 'N/A'}" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Address</label>
-                        <textarea class="form-control" rows="2" readonly>${withdrawal.address || 'N/A'}</textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Requested At</label>
-                        <input type="text" value="${date}" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Status</label>
-                        <input type="text" value="${withdrawal.status || 'pending'}" class="form-control" readonly>
-                    </div>
-                    
-                    ${withdrawal.processedAt ? `
-                    <div class="form-group">
-                        <label>Processed At</label>
-                        <input type="text" value="${processedDate}" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Processed By</label>
-                        <input type="text" value="${withdrawal.processedBy || 'N/A'}" class="form-control" readonly>
-                    </div>
-                    ` : ''}
-                    
-                    ${withdrawal.userBalanceBefore !== undefined ? `
-                    <div class="form-group">
-                        <label>User Balance Before</label>
-                        <input type="text" value="BDT ${withdrawal.userBalanceBefore?.toFixed(2) || '0.00'}" class="form-control" readonly>
-                    </div>
-                    ` : ''}
-                    
+                // ... inside viewWithdrawal function ...
+
+// 1. DEFINE THE ACCOUNT VALUE HERE
+const accountDetail = withdrawal.accountNumber || withdrawal.address || 'N/A';
+
+details.innerHTML = `
+    <div class="form-group">
+        <label>Withdrawal ID</label>
+        <input type="text" value="${withdrawal.id || 'N/A'}" class="form-control" readonly>
+    </div>
+    
+    <div class="form-group">
+        <label>User ID</label>
+        <input type="text" value="${withdrawal.userId || 'N/A'}" class="form-control" readonly>
+    </div>
+    
+    <div class="form-group">
+        <label>Username</label>
+        <input type="text" value="${withdrawal.username || 'N/A'}" class="form-control" readonly>
+    </div>
+    
+    <div class="form-group">
+        <label>Amount</label>
+        <input type="text" value="BDT ${withdrawal.amount?.toFixed(2) || '0.00'}" class="form-control" readonly>
+    </div>
+    
+    <div class="form-group">
+        <label>Method</label>
+        <input type="text" value="${withdrawal.method || 'N/A'}" class="form-control" readonly>
+    </div>
+    
+    <div class="form-group">
+        <label>Account Number / Email</label>
+        <textarea class="form-control" rows="2" readonly>${accountDetail}</textarea>
+    </div>
+    
+    <div class="form-group">
+        <label>Requested At</label>
+        <input type="text" value="${date}" class="form-control" readonly>
+    </div>
+    
+    <div class="form-group">
+        <label>Status</label>
+        <input type="text" value="${withdrawal.status || 'pending'}" class="form-control" readonly>
+    </div>
+    
     ${withdrawal.status === 'pending' ? `
     <div id="modal-btns-${withdrawalId}" style="display: flex; gap: 1rem; margin-top: 1.5rem;">
         <button class="btn-primary" style="flex: 1; background: #1A5237;" onclick="processWithdrawal('${withdrawalId}', 'approve')">
