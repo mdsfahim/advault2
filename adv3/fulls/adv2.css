@@ -833,6 +833,7 @@ body {
 
 /* 2. New Header Container */
 /* Update the .watermark-header class */
+/* Find and replace .watermark-header in adv2.css */
 .watermark-header {
   position: fixed;
   top: 0; 
@@ -840,7 +841,8 @@ body {
   right: 0;
   /* Base height (5rem) + Status Bar Height */
   height: calc(5rem + env(safe-area-inset-top)); 
-  padding-top: env(safe-area-inset-top); /* Push content down */
+  /* Push content down by the amount of the status bar */
+  padding-top: env(safe-area-inset-top); 
   padding-left: 1.25rem;
   padding-right: 1.25rem;
   background: rgba(255, 255, 255, 0.95);
@@ -849,10 +851,11 @@ body {
   border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   z-index: 1050;
   display: flex;
-  align-items: center; /* This centers the content vertically in the REMAINING space */
+  align-items: center;
   justify-content: space-between;
   overflow: hidden;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: border-box; /* Ensures padding doesn't break width */
 }
 body.header-hidden .section, 
 body.header-hidden .section-fullscreen {
@@ -1231,10 +1234,8 @@ body.header-hidden .watermark-header {
 }
 
 /* ================= NEW FINTECH NAVIGATION STYLES ================= */
-/* Overriding old nav styles */
-.fixed-bottom-nav { display: none !important; } 
 
-.fixed-bottom-nav, /* Update .fintech-bottom-nav */
+/* Find and replace .fintech-bottom-nav in adv2.css */
 .fintech-bottom-nav {
   position: fixed !important; 
   bottom: 0;
@@ -1244,14 +1245,15 @@ body.header-hidden .watermark-header {
   z-index: 1000;
   background: white;
   border-top: 1px solid #f1f5f9;
-  /* Add padding for the home indicator */
+  /* Add padding for the physical home bar area */
   padding-bottom: env(safe-area-inset-bottom);
-  /* Add a minimum padding so it looks good even on phones without a bar */
-  padding-top: 0.5rem; 
-  height: calc(60px + env(safe-area-inset-bottom)); /* Dynamic height */
+  /* Base height (60px) + Home Bar area */
+  height: calc(60px + env(safe-area-inset-bottom));
   box-sizing: border-box;
+  display: flex;
+  align-items: flex-start; /* Aligns icons to top of bar, away from bottom edge */
+  padding-top: 0.5rem; /* Space above icons */
 }
-
 .nav-list {
   display: flex;
   justify-content: space-around;
@@ -1375,6 +1377,7 @@ body.header-hidden main {
 
 /* 5. Fix for Profile/Withdraw specific styling */
 /* Update .section and .section-fullscreen */
+/* Find and replace .section, .section-fullscreen in adv2.css */
 .section, .section-fullscreen {
     position: absolute;
     top: 0;
@@ -1382,11 +1385,12 @@ body.header-hidden main {
     width: 100%;
     height: 100%;
     
-    /* Top Padding: Header Base (5rem) + Status Bar + Extra Space (1rem) 
-       Bottom Padding: Bottom Nav Base (60px) + Home Bar + Extra Space (1rem)
-    */
-    padding-top: calc(6rem + env(safe-area-inset-top)) !important;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+    /* Top Padding: Header (5rem) + Status Bar + Extra Gap (1rem) */
+    padding-top: calc(5rem + env(safe-area-inset-top) + 1rem) !important;
+    
+    /* Bottom Padding: Nav Bar (60px) + Home Bar + Extra Gap (1rem) */
+    padding-bottom: calc(60px + env(safe-area-inset-bottom) + 1rem) !important;
+    
     padding-left: 16px !important;
     padding-right: 16px !important;
     
@@ -1458,25 +1462,22 @@ body:not(.header-hidden) .section-fullscreen {
   100% { transform: translateX(-100%); }
 }
 
+/* Find #androidTopNotification in adv2.css */
 #androidTopNotification {
   position: fixed;
-  top: 7rem;
+  /* Start below the status bar + header */
+  top: calc(1rem + env(safe-area-inset-top)); 
   left: 50%;
-  transform: translateY(-100%) translateX(-50%);
+  transform: translateY(-150%) translateX(-50%); /* Start hidden higher up */
   width: 90%;
   max-width: 28rem;
-  background: #1f2937;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 1rem;
-  text-align: center;
+  /* ... keep existing styles ... */
   z-index: 9999;
-  opacity: 0;
-  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
 }
+
 #androidTopNotification.show {
-  transform: translateY(0) translateX(-50%);
-  opacity: 1;
+  /* Drop down into view */
+  transform: translateY(4rem) translateX(-50%); 
 }
 
 #editModal {
