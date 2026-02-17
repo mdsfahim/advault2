@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RichAds to Telegram Manager</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { margin-top: 0; color: #333; border-bottom: 2px solid #0088cc; padding-bottom: 10px; }
+        label { display: block; margin-top: 10px; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { background-color: #0088cc; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 15px; width: 100%; }
+        button:hover { background-color: #006699; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        
+        /* Preview Section */
+        #preview-area { display: none; border: 1px solid #eee; padding: 15px; border-radius: 8px; background: #fafafa; }
+        #preview-img { max-width: 100%; height: auto; border-radius: 5px; display: block; margin-bottom: 10px; }
+        .preview-title { font-weight: bold; font-size: 1.1em; }
+        .preview-body { color: #666; margin: 5px 0; }
+        .preview-btn { display: inline-block; padding: 8px 15px; background: #333; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9em; }
+
+        /* Logs */
+        #logs { background: #333; color: #0f0; padding: 15px; border-radius: 5px; font-family: monospace; height: 150px; overflow-y: scroll; font-size: 12px; }
+        .log-err { color: #ff5555; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>1. Settings</h2>
+        <label>Your Bot Token (from @BotFather):</label>
+        <input type="password" id="botToken" placeholder="123456789:ABCdef..." value="">
+        
+        <label>Target Chat ID (User ID or Channel ID):</label>
+        <input type="text" id="chatId" placeholder="e.g. 515279737" value="">
+
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label>Publisher ID:</label>
+                <input type="text" id="pubId" value="1002563">
+            </div>
+            <div style="flex: 1;">
+                <label>Widget ID:</label>
+                <input type="text" id="widgetId" value="388121">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Operations</h2>
+        <button onclick="fetchAd()">Step 1: Fetch Ad from RichAds</button>
+        
+        <div id="preview-area">
+            <h3>Ad Preview:</h3>
+            <img id="preview-img" src="" alt="Ad Image">
+            <div class="preview-title" id="preview-title"></div>
+            <div class="preview-body" id="preview-body"></div>
+            <a href="#" class="preview-btn" id="preview-btn">Button Text</a>
+            
+            <button onclick="sendToTelegram()" style="background-color: #28a745; margin-top: 20px;">Step 2: Send to Telegram</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3. Status Log</h2>
+        <div id="logs">Ready...</div>
+    </div>
+
+    <script>
+        // Store the current ad data globally
+        let currentAdData = null;
+
+        function log(msg, isError = false) {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.textContent = `> ${msg}`;
+            if(isError) entry.className = 'log-err';
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        async function fetchAd() {
+            const pubId = document.getElementById('pubId').value;
+            const widgetId = document.getElementById('widgetId').value;
+            const targetUser = document.getElementById('chatId').value;
+
+            if(!targetUser) { alert("Please enter a Target Chat ID first."); return; }
+
+            log("Fetching ad from RichAds endpoint...");
+
+            // Prepare the payload based on your example
+            const payload = {
+                "language_code": "en",
+                "publisher_id": pubId,
+                "widget_id": widgetId,
+                "bid_floor": 0.0001,
+                "telegram_id": targetUser,
+                "production": true
+            };
+
+            try {
+                // NOTE: We use a CORS proxy because browsers often block direct API calls to ad networks
+                // If the direct call fails, we might need a proxy. Trying direct first:
+                const response = await fetch('http://15068.xml.adx1.com/telegram-mb', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                        // 'Access-Control-Allow-Origin': '*' // This header is for servers, not clients, but keeping structure clean
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+                const data = await response.json();
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    currentAdData = data[0]; // Take the first ad
+                    log("Ad received successfully!");
+                    renderPreview(currentAdData);
+                } else {
+                    log("Response received, but no ads found.", true);
+                    console.log(data);
+                }
+
+            } catch (error) {
+                log(`Fetch Failed: ${error.message}`, true);
+                log("Tip: If you see a 'Network Error' or 'CORS' error in console, the Ad Network blocks browser requests. You strictly need a backend server (Node.js) for this.", true);
+            }
+        }
+
+        function renderPreview(ad) {
+            document.getElementById('preview-area').style.display = 'block';
+            document.getElementById('preview-img').src = ad.image;
+            document.getElementById('preview-title').innerText = ad.title;
+            document.getElementById('preview-body').innerText = ad.message;
+            document.getElementById('preview-btn').innerText = ad.button || "Open";
+            document.getElementById('preview-btn').href = ad.link;
+        }
+
+        async function sendToTelegram() {
+            const botToken = document.getElementById('botToken').value;
+            const chatId = document.getElementById('chatId').value;
+
+            if (!botToken || !chatId) {
+                alert("Please fill in Bot Token and Chat ID.");
+                return;
+            }
+            if (!currentAdData) {
+                alert("No ad data loaded. Fetch an ad first.");
+                return;
+            }
+
+            log("Sending to Telegram...");
+
+            // Construct the Telegram Button (Inline Keyboard)
+            const keyboard = {
+                inline_keyboard: [[
+                    { text: currentAdData.button || "Open Link", url: currentAdData.link }
+                ]]
+            };
+
+            // We use FormData like your example to handle the request
+            // Note: For Telegram 'sendPhoto', the caption holds the text
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', currentAdData.image);
+            formData.append('caption', `**${currentAdData.title}**\n${currentAdData.message}`);
+            formData.append('parse_mode', 'Markdown');
+            formData.append('reply_markup', JSON.stringify(keyboard));
+
+            try {
+                const url = `https://api.telegram.org/bot${botToken}/sendPhoto`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const resData = await response.json();
+
+                if (resData.ok) {
+                    log("SUCCESS! Ad sent to Telegram bot.");
+                } else {
+                    log(`Telegram Error: ${resData.description}`, true);
+                }
+
+            } catch (error) {
+                log(`Send Failed: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>
