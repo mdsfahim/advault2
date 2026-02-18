@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdVault Earnings</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src='//libtl.com/sdk.js' data-zone='9683040' data-sdk='show_9683040'></script>
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="adv2.css">
+
+</head>
+<body class="flex flex-col min-h-screen" oncontextmenu="return false;">
+<div id="splashScreen">
+    
+    <img src="https://worldnews24x7.infy.uk/image/advault3.png" alt="AdVault Logo" class="splash-logo">
+
+    <div class="loader-container">
+        <div class="loader-bar" id="loadingBar"></div>
+    </div>
+
+    <p class="loading-text" id="loadingStatus">Initializing...</p>
+
+  </div>
+  <!-- Maintenance Mode Popup -->
+ <div id="maintenancePopup" style="display: none;">
+    <div class="tech-grid-bg"></div>
+
+    <div class="maintenance-card">
+        
+        <div class="icon-container">
+            <i class="fas fa-cog gear-main"></i>
+            <i class="fas fa-cog gear-small"></i>
+            <i class="fas fa-bolt sparkle"></i>
+        </div>
+
+        <h2 class="maint-title">System Upgrade</h2>
+        
+        <p class="maint-desc">
+            We are currently updating our servers to make AdVault faster and more secure. We'll be back shortly!
+        </p>
+
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            <span class="text-xs font-bold text-blue-700 uppercase tracking-wide">Work in progress</span>
+        </div>
+
+        <a href="https://t.me/AdVault_Group" target="_blank" class="telegram-btn">
+            <i class="fab fa-telegram-plane text-xl"></i>
+            <span>Check Updates on Telegram</span>
+        </a>
+
+        <button class="refresh-btn" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i> Try Refreshing
+        </button>
+
+    </div>
+  </div>
+  <!-- Ad Overlay for Extra Earnings -->
+ <div id="adOverlay">
+    
+    <div class="ad-header">
+        <div class="timer-pill">
+            <div id="timerSpinner" class="timer-spinner"></div>
+            <span id="adHeaderTimer" class="timer-text">Wait 00:00</span>
+        </div>
+
+        <div class="hidden sm:block text-slate-400 text-xs font-semibold tracking-wide uppercase">
+            Sponsor Content
+        </div>
+
+        <button id="closeAdBtn" class="close-btn-modern">
+            <i class="fas fa-lock text-sm"></i>
+        </button>
+    </div>
+
+    <div id="adContainer" class="ad-content-wrapper">
+        </div>
+
+    <div class="ad-footer">
+        <div id="adFooterMessage" class="status-message">
+            <i class="fas fa-eye text-blue-400 text-xs"></i>
+            <span>Stay on this page to earn reward</span>
+        </div>
+
+        <div class="progress-container">
+            <div id="adProgressBar" class="progress-bar-fill"></div>
+        </div>
+    </div>
+
+  </div>
+  <!-- Firebase Loading Indicator -->
+  <div class="firebase-loading" id="firebaseLoading">
+    <div class="firebase-loading-spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Telegram Warning Popup -->
+ <div id="telegramWarningPopup" style="display: none;">
+    <div class="security-pattern"></div>
+
+    <div class="warning-card">
+        
+        <div class="icon-wrapper">
+            <div class="icon-bg"></div>
+            <i class="fab fa-telegram-plane telegram-icon"></i>
+            <div class="lock-badge">
+                <i class="fas fa-lock"></i>
+            </div>
+        </div>
+
+        <h2 class="warning-title">Telegram Required</h2>
+        <p class="warning-desc">
+            AdVault is designed to run exclusively within the Telegram app to ensure account security and proper reward tracking.
+        </p>
+
+        <a href="https://t.me/AdVault_2bot" class="open-bot-btn">
+            <i class="fab fa-telegram-plane text-xl"></i>
+            <span>Open Telegram Bot</span>
+        </a>
+
+        <div class="manual-link">
+            <a href="#" onclick="document.getElementById('telegramWarningPopup').style.display='none'; return false;">
+                Continue in Browser (Limited)
+            </a>
+        </div>
+        
+    </div>
+  </div>
+  <!-- Instructions Popup -->
+<div id="instructionsPopup" class="notif-overlay" onclick="hideInstructionsPopup()" style="display: none;">
+  <div class="notif-panel" onclick="event.stopPropagation()">
+    
+    <div class="flex justify-between items-center p-6 border-b border-slate-100 flex-shrink-0">
+      <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+        <i class="fas fa-book-open text-blue-500"></i> App Guide
+      </h2>
+      <button class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full hover:bg-slate-200 transition-colors" onclick="hideInstructionsPopup()">
+        Close
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar flex flex-col gap-3" id="instructionsList">
+      
+      <div class="n-item guide-item">
+        <div class="icon-box icon-info"><i class="fas fa-eye"></i></div>
+        <div class="flex-1">
+          <h4 class="text-sm font-bold text-slate-800">Ad Watching Rules</h4>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Watch ads for <span id="instructionAdDuration" class="font-bold">15</span>s. Closing early triggers penalty.</p>
+        </div>
+      </div>
+
+      <div class="n-item guide-item">
+        <div class="icon-box icon-promo"><i class="fas fa-coins"></i></div>
+        <div class="flex-1">
+          <h4 class="text-sm font-bold text-slate-800">Earning System</h4>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Each task earns <span id="instructionEarningsPerAd" class="font-bold">0.05</span> BDT. Complete daily tasks.</p>
+        </div>
+      </div>
+
+      <div class="n-item guide-item">
+        <div class="icon-box icon-warn"><i class="fas fa-ban"></i></div>
+        <div class="flex-1">
+          <h4 class="text-sm font-bold text-slate-800">Penalty System</h4>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Early close locks tasks for <span id="instructionPenaltyDuration" class="font-bold">2</span> minutes.</p>
+        </div>
+      </div>
+
+      <div class="n-item guide-item">
+        <div class="icon-box" style="background: #f3e8ff; color: #7c3aed;"><i class="fas fa-wallet"></i></div>
+        <div class="flex-1">
+          <h4 class="text-sm font-bold text-slate-800">Withdrawal</h4>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Min withdraw: <span id="instructionMinWithdrawal" class="font-bold">100</span> BDT.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="p-4 border-t border-slate-100 bg-slate-50 mt-auto">
+      <button class="w-full py-3 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-colors" onclick="hideInstructionsPopup()">
+        Got it, thanks!
+      </button>
+    </div>
+
+  </div>
+</div>
+  <!-- Dynamic Payment Edit Modal -->
+  <div id="dynamicPaymentEditModal" style="display: none;">
+    <div class="modal-content">
+      <button id="closeDynamicPaymentModal" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+      <h2 class="text-2xl font-bold text-gray-800 mb-5 text-center">Edit Payment Information</h2>
+      
+      <div id="dynamicPaymentForm" class="space-y-4">
+        <!-- Dynamic payment fields will be inserted here -->
+      </div>
+      
+      <button id="saveDynamicPaymentBtn" class="btn-primary w-full mt-8 py-3">
+        Save Payment Information
+      </button>
+    </div>
+  </div>
+
+  <!-- New Success Modal for Withdraw Section -->
+  <div class="new-modal-overlay" id="new-successModal">
+    <div class="new-modal-content text-center">
+      <div class="checkmark-wrapper">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+          <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">Request Submitted!</h2>
+      <p class="text-gray-500 mb-6" id="new-successMessage">Your withdrawal is being processed.</p>
+      <button class="btn-primary w-full" onclick="document.getElementById('new-successModal').classList.remove('active')">Done</button>
+    </div>
+  </div>
+
+  <!-- New Dynamic Payment Edit Modal for Withdraw Section -->
+  <div id="new-dynamicPaymentEditModal" class="new-modal-overlay">
+    <div class="new-modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-800">Edit Payment Info</h2>
+        <button id="new-closeDynamicPaymentModal" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+      </div>
+      <div id="new-dynamicPaymentForm" class="space-y-4">
+        <!-- Dynamic payment fields will be inserted here -->
+      </div>
+      <button id="new-saveDynamicPaymentBtn" class="btn-primary w-full mt-6">Save Information</button>
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+ <div id="notification-container"></div>
+
+  <!-- Telegram Connection Indicator -->
+  <div class="telegram-connected" id="telegramConnected">
+    <i class="fab fa-telegram mr-2"></i>Connected to Telegram
+  </div>
+
+  <!-- Success Popup -->
+<div id="successPopup">
+    <div class="success-card">
+      
+      <div class="icon-wrapper">
+        <div class="icon-circle"></div>
+        
+        <div class="svg-container">
+            <svg class="checkmark-svg" viewBox="0 0 52 52">
+                <path d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+        </div>
+        
+        <div class="burst-core">
+            <span class="bg-green-400"></span>
+            <span class="bg-blue-400"></span>
+            <span class="bg-yellow-400"></span>
+            <span class="bg-red-400"></span>
+            <span class="bg-purple-400"></span>
+            <span class="bg-orange-400"></span>
+        </div>
+      </div>
+
+      <h2 class="success-title" id="popupTitle">Success!</h2>
+      <p class="success-desc" id="popupMessage">Action completed successfully.</p>
+
+      <button class="success-btn" onclick="closeSuccessPopup()">
+        Continue
+      </button>
+
+    </div>
+  </div>
+  <!-- Header -->
+ <header class="watermark-header" id="main-header">
+    
+    <div class="brand-watermark">
+      <span class="watermark-text">ADVAULT</span>
+    </div>
+
+    <div class="header-content">
+      
+     <div class="user-pill" onclick="showSection('profile-section')">
+        <div class="avatar-circle">
+            
+            <div id="headerProfileImage" class="avatar-img-wrapper">
+                <i class="fas fa-user-astronaut text-blue-500"></i>
+            </div>
+
+            <div class="status-dot"></div>
+            
+        </div>
+        <div>
+           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide" id="greeting-text">Good Morning</p>
+           <p class="text-sm font-extrabold text-slate-800 leading-none" id="header-username">@User</p>
+        </div>
+      </div>
+      <div class="action-group">
+        
+        <div class="flag-pill">
+          <span class="text-lg leading-none" id="country-flag">🏳️</span>
+          <span id="country-code-text">BD</span>
+        </div>
+
+        <button class="notif-btn" onclick="openNotificationsModal()">
+          <i class="far fa-bell text-lg"></i>
+          <span id="notificationDot" class="red-dot hidden"></span>
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+  <!-- Main Content -->
+  <main class="flex-grow p-4 pt-20 pb-20 space-y-6 container mx-auto">
+    <!-- Home Section -->
+  <div id="home-section" class="section active">
+      
+      <div class="ticker-pill mt-2">
+        <div class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xs shrink-0">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <div class="flex-1 overflow-hidden">
+          <p class="text-xs font-bold text-slate-700 marquee-text-anim" id="marqueeTextHome">
+            Daily Bonus: Tasks pay +10% today!
+          </p>
+        </div>
+        <i class="fas fa-chevron-right text-[10px] text-slate-400"></i>
+      </div>
+
+      <div class="wallet-hero">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <p class="text-slate-300 text-xs font-semibold uppercase tracking-wider mb-1">Current Balance</p>
+            <h1 class="text-3xl font-extrabold tracking-tight" id="home-earnings-val">BDT 0.00</h1>
+          </div>
+          <div class="bg-white/10 backdrop-blur-md p-2 rounded-lg border border-white/10 text-white/80">
+            <i class="fas fa-wallet text-lg"></i>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between">
+           <div class="flex items-center gap-2">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span class="text-[10px] font-medium text-slate-300">Live Updates</span>
+           </div>
+           <span class="text-[10px] font-bold bg-green-500/20 text-green-100 px-2 py-1 rounded border border-green-500/30">
+             BDT
+           </span>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="action-btn" onclick="showSection('earn-section')">
+          <div class="icon-sq text-blue-600">
+            <i class="fas fa-play"></i>
+          </div>
+          <span class="action-label">Earn</span>
+        </button>
+
+        <button class="action-btn" onclick="showSection('withdraw-section')">
+          <div class="icon-sq text-emerald-600">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+          <span class="action-label">Withdraw</span>
+        </button>
+
+        <button class="action-btn" onclick="showSection('earning-history-section'); renderEarningHistory();">
+          <div class="icon-sq text-purple-600">
+            <i class="fas fa-history"></i>
+          </div>
+          <span class="action-label">History</span>
+        </button>
+
+      <button class="action-btn" onclick="openCommunityGroup()">
+          <div class="icon-sq text-orange-500">
+            <i class="fas fa-headset"></i>
+          </div>
+          <span class="action-label">Support</span>
+        </button>
+      </div>
+
+      <h3 class="text-sm font-bold text-slate-800 mb-3 ml-1">Today's Overview</h3>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="flex justify-between items-start mb-2">
+             <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+               <i class="fas fa-eye text-sm"></i>
+             </div>
+             <span class="text-[10px] font-bold text-slate-400 uppercase">Daily</span>
+          </div>
+          <p class="text-xs text-slate-400 font-bold mb-0.5">Ads Watched</p>
+          <div class="flex items-baseline gap-1">
+            <span class="text-lg font-bold text-slate-800" id="home-ads-val">0</span>
+            <span class="text-[10px] text-slate-400" id="home-ads-target">/ 1000</span>
+          </div>
+          <div class="progress-line-bg">
+            <div class="progress-line-fill" id="home-ads-progress" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="flex justify-between items-start mb-2">
+             <div class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center">
+               <i class="fas fa-check-circle text-sm"></i>
+             </div>
+             <span class="text-[10px] font-bold text-slate-400 uppercase">Lifetime</span>
+          </div>
+          <p class="text-xs text-slate-400 font-bold mb-0.5">Total Paid Out</p>
+          <div class="flex items-baseline gap-1">
+            <span class="text-[10px] text-slate-500">BDT</span>
+            <span class="text-lg font-bold text-slate-800" id="home-lifetime-val">0.00</span>
+          </div>
+          <div class="mt-2 text-[10px] text-green-600 font-bold flex items-center gap-1">
+             <i class="fas fa-arrow-up"></i> Growing
+          </div>
+        </div>
+        
+        
+    
+      </div>
+      <div id="homeBannerContainer" class="banner-zone"></div>
+    </div>
+    <!-- Earn Section -->
+ <div id="earn-section" class="section">
+      
+      <div class="flex items-center justify-between mb-4 pt-2">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-800">Daily Tasks</h1>
+          <p class="text-xs text-slate-500 font-medium">Complete tasks to earn money</p>
+        </div>
+        <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold border border-blue-100 flex items-center gap-1 shadow-sm">
+          <i class="fas fa-trophy text-[10px]"></i> Level 1
+        </div>
+      </div>
+
+      <div class="goal-card">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Today's Goal</span>
+          <span class="text-[10px] font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded">Resets daily</span>
+        </div>
+        
+        <div class="flex items-baseline gap-1">
+          <span class="text-4xl font-bold text-slate-800" id="earn-completed">0</span>
+          <span class="text-sm text-slate-400 font-medium">/ <span id="earn-total">1000</span></span>
+        </div>
+
+        <div class="progress-track">
+          <div id="earn-progress-bar" class="progress-fill" style="width: 0%;"></div>
+        </div>
+
+        <div class="flex justify-between text-xs font-medium text-slate-500">
+          <div class="flex items-center gap-1.5">
+            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+            <span>Completed</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="text-slate-400">Remaining:</span>
+            <span class="text-slate-800 font-bold" id="earn-remaining">1000</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-card">
+        <div class="task-icon-circle">
+          <i class="fas fa-play"></i>
+        </div>
+        
+        <h3 class="text-lg font-bold text-slate-800">Watch Video Ad</h3>
+        
+        <div class="flex items-center gap-3 my-4 text-sm">
+          <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-md text-xs font-bold border border-green-200">
+            +<span id="earningsPerAdDisplay">0.05</span> BDT
+          </span>
+          <span class="text-slate-300">•</span>
+          <span class="text-slate-500 flex items-center gap-1.5 font-medium">
+            <i class="far fa-clock"></i> <span id="adDurationDisplay">15</span>s
+          </span>
+        </div>
+
+        <button id="startEarningAd" class="earn-btn">
+          <span id="adButtonText">Start Task</span> <i class="fas fa-arrow-right text-xs opacity-70"></i>
+        </button>
+        
+        <div id="penaltyWarningCard" class="penalty-card-modern">
+          <div class="flex items-center gap-2 text-red-600 font-bold text-sm mb-2">
+            <i class="fas fa-exclamation-triangle"></i> Ad Closed Too Early
+          </div>
+          <ul class="penalty-list">
+            <li><i class="fas fa-times-circle"></i> Must watch for <span id="penaltyAdDuration">15</span> seconds</li>
+            <li><i class="fas fa-lock"></i> Task locked for <span id="penaltyDurationDisplay">2</span> minutes</li>
+          </ul>
+          <div class="text-right mt-2">
+             <span class="text-xs text-blue-500 font-medium cursor-pointer hover:underline" id="showInstructions">View Rules</span>
+          </div>
+        </div>
+      </div>
+      
+      
+      <div class="bg-white border border-slate-200 rounded-[1.25rem] p-5 shadow-sm mb-6">
+        
+        <div class="flex items-center mb-5">
+            <div class="w-12 h-12 rounded-[1rem] bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center shadow-md shrink-0 mr-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="none" class="w-6 h-6">
+                    <path d="M8 5v14l11-7z" fill="white" />
+                </svg>
+            </div>
+            <div class="flex-grow">
+                <h3 class="text-lg font-bold text-slate-800 leading-tight">Watch Ads</h3>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Earn 15–40 pts per ad</p>
+            </div>
+            <div class="bg-green-50 text-green-600 px-3 py-1.5 rounded-full text-xs font-bold border border-green-100 flex items-center gap-1.5 shadow-sm shrink-0">
+                <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                3/3 ready
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+            
+           <div id="watchVideoLibtlBtn" class="flex items-center p-3 bg-slate-50 border border-slate-100 rounded-[1rem] hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer active:scale-[0.98]">
+                <div class="w-11 h-11 rounded-[0.85rem] bg-gradient-to-br from-orange-500 to-pink-600 flex items-center justify-center shrink-0 mr-4 shadow-sm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 text-white">
+                        <polygon points="5 3 19 12 5 21 5 3" fill="transparent" stroke-width="2.5"></polygon>
+                    </svg>
+                </div>
+                <div class="flex-grow">
+                    <h4 class="text-sm font-bold text-slate-800">Watch Video</h4>
+                    <p class="text-[11px] text-slate-500 font-medium mt-0.5">Watch video ads for rewards</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm font-extrabold text-green-500">+<span id="libtlRewardDisplay">0.05</span></div>
+                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">BDT</div>
+                </div>
+            </div>
+
+            <div class="flex items-center p-3 bg-slate-50 border border-slate-100 rounded-[1rem] hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer active:scale-[0.98]">
+                <div class="w-11 h-11 rounded-[0.85rem] bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shrink-0 mr-4 shadow-sm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 text-white">
+                        <rect x="2" y="7" width="20" height="15" rx="2" ry="2" stroke-width="2"></rect>
+                        <polyline points="17 2 12 7 7 2" stroke-width="2"></polyline>
+                    </svg>
+                </div>
+                <div class="flex-grow">
+                    <h4 class="text-sm font-bold text-slate-800">Quick View</h4>
+                    <p class="text-[11px] text-slate-500 font-medium mt-0.5">Fast content view</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm font-extrabold text-green-500">+15</div>
+                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">points</div>
+                </div>
+            </div>
+
+            <div class="flex items-center p-3 bg-slate-50 border border-slate-100 rounded-[1rem] hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer active:scale-[0.98]">
+                <div class="w-11 h-11 rounded-[0.85rem] bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shrink-0 mr-4 shadow-sm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 text-white">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke-width="2"></path>
+                        <polyline points="15 3 21 3 21 9" stroke-width="2"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3" stroke-width="2"></line>
+                    </svg>
+                </div>
+                <div class="flex-grow">
+                    <h4 class="text-sm font-bold text-slate-800">Sponsor Page</h4>
+                    <p class="text-[11px] text-slate-500 font-medium mt-0.5">Visit sponsor</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm font-extrabold text-green-500">+20</div>
+                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">points</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-4 bg-slate-50 p-3 rounded-xl flex gap-3 items-start border border-slate-100">
+            <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <p class="text-[11px] text-slate-500 leading-relaxed font-medium">
+                Watch ads completely to earn full rewards. Ads rotate between networks for best availability.
+            </p>
+        </div>
+      </div>
+     
+      <div id="extraTasksContainer" class="grid gap-4 mb-6">
+        </div>
+      
+      <div id="noAdsMsg" class="hidden text-center text-slate-400 text-sm py-8 italic bg-slate-50 rounded-xl mb-6 border border-slate-100">
+          <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 text-slate-300">
+             <i class="fas fa-box-open text-xl"></i>
+          </div>
+          No bonus tasks available right now.
+      </div>
+<div id="earnBannerContainer" class="banner-zone-stack"></div>
+      <div class="invite-banner">
+        <i class="fas fa-gift invite-deco"></i>
+        <h3 class="text-xl font-bold mb-1">Invite Friends</h3>
+        <p class="text-orange-100 text-sm mb-4 max-w-[85%] leading-relaxed opacity-90">Get bonuses for every friend who joins.</p>
+        
+        <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-4 border border-white/20">
+          <div class="flex justify-between items-center mb-1">
+            <p class="text-[10px] text-orange-50 uppercase font-bold tracking-wider">Referral Link</p>
+            <span class="text-[10px] bg-black/20 px-1.5 rounded text-white/80">0 refs</span>
+          </div>
+          <p class="font-mono text-sm truncate select-all text-white">Coming Soon</p>
+        </div>
+
+        <button id="inviteFriendsBtn" class="btn-white">
+          <i class="fas fa-share-alt mr-2"></i> Share Invite Link
+        </button>
+      </div>
+      
+      <div class="h-12"></div>
+
+    </div>
+    
+    <!-- earnings history-->
+<div id="earning-history-section" class="section section-fullscreen bg-slate-50" style="position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; padding: 0 !important; margin: 0 !important; height: 100% !important; z-index: 2000;">
+        
+        <div class="flex flex-col h-full w-full overflow-hidden">
+            
+            <div class="shrink-0 z-50 bg-slate-50 px-4 pt-8 pb-2 shadow-sm relative">
+                
+                <div class="flex items-center gap-3 mb-4">
+                    <button onclick="showSection('home-section')" class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 shadow-sm hover:text-blue-600 transition-all shrink-0 active:scale-95">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800 leading-tight">Earning Activity</h1>
+                        <p class="text-xs text-gray-500">Your last 3 days of history</p>
+                    </div>
+                </div>
+
+                <div class="summary-card-history mb-4">
+                    <div class="flex items-center gap-2 text-xs font-semibold uppercase opacity-80 mb-1">
+                        <i class="far fa-clock"></i> Recent 72h
+                    </div>
+                    <div class="text-3xl font-extrabold" id="history-total-72h">+ BDT 0.00</div>
+                    <p class="text-xs text-blue-100 mt-2 opacity-80">Saved on device storage</p>
+                </div>
+
+                <div class="tab-row">
+                    <button class="tab-pill active" onclick="filterEarningHistory('all', this)">All</button>
+                    <button class="tab-pill" onclick="filterEarningHistory('ad', this)">Video Ads</button>
+                    <button class="tab-pill" onclick="filterEarningHistory('task', this)">Special Tasks</button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-4 pb-20 pt-2" id="historyScrollArea">
+                
+                <div id="earningHistoryContainer">
+                    <div class="text-center py-10 text-gray-400">
+                        <i class="fas fa-spinner fa-spin text-2xl"></i>
+                        <p class="mt-2 text-sm">Loading history...</p>
+                    </div>
+                </div>
+                
+                <div class="text-center p-4 border-t border-dashed border-gray-200 mt-4 text-xs text-gray-400">
+                    History older than 3 days is automatically removed.
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- NEW Withdraw Section (Replaced with improved UI) -->
+    <div id="withdraw-section" class="section section-fullscreen bg-slate-50">
+      
+      <div class="px-5 pt-8 pb-4">
+          <div class="flex items-center gap-3 mb-6">
+             <button onclick="showSection('home-section')" class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 shadow-sm hover:text-blue-600 transition-all active:scale-95">
+                <i class="fas fa-arrow-left"></i>
+             </button>
+             <div>
+                <h1 class="text-2xl font-bold text-slate-800 leading-none">Withdraw Funds</h1>
+                <p class="text-xs text-slate-500 font-medium mt-1">Transfer earnings to your account</p>
+             </div>
+          </div>
+
+          <div class="withdraw-balance-card">
+            <div class="flex items-center gap-2 text-green-100 mb-1">
+              <i class="fas fa-wallet text-sm"></i>
+              <span class="text-xs font-semibold uppercase tracking-wider">Available Balance</span>
+            </div>
+            <h2 class="text-3xl font-bold" id="withdraw-balance-display">BDT 0.00</h2>
+            <p class="text-xs text-green-50 mt-4 opacity-90">Min. withdraw: BDT <span id="minWithdrawDisplay">100.00</span></p>
+          </div>
+
+          <label class="section-label">Select Method</label>
+          <div id="withdrawMethodGrid" class="payment-grid">
+             <div class="col-span-2 text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin"></i> Loading methods...</div>
+          </div>
+
+          <div id="sendingToBox" class="account-info-box hidden">
+              <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">
+                      <i class="fas fa-user"></i>
+                  </div>
+                  <div>
+                      <p class="text-[10px] text-blue-500 font-bold uppercase">Sending to</p>
+                      <p class="text-sm font-semibold text-slate-700" id="sendingToNumber">--</p>
+                  </div>
+              </div>
+              <button onclick="showSection('payment-methods-section'); renderPaymentMethodsPage();" class="text-xs bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-lg font-medium hover:bg-blue-50">Change</button>
+          </div>
+          
+          <div id="linkAccountMsg" class="hidden mb-6 p-3 bg-yellow-50 text-yellow-700 rounded-lg text-sm border border-yellow-200 flex items-center justify-between">
+              <span><i class="fas fa-exclamation-circle mr-1"></i> No account linked.</span>
+              <button onclick="showSection('payment-methods-section'); renderPaymentMethodsPage();" class="font-bold underline">Link Now</button>
+          </div>
+
+          <label class="section-label">Enter Amount</label>
+          <div class="amount-container">
+            <span class="currency-symbol">BDT</span>
+            <input type="number" id="withdrawAmountInput" class="amount-input" placeholder="0.00" oninput="updateWithdrawSummary()">
+          </div>
+
+          <div class="quick-amounts">
+            <button class="pill-btn" onclick="setWithdrawAmount(100)">100</button>
+            <button class="pill-btn" onclick="setWithdrawAmount(200)">200</button>
+            <button class="pill-btn" onclick="setWithdrawAmount(500)">500</button>
+            <button class="pill-btn" onclick="setWithdrawAmount(1000)">1000</button>
+            <button class="pill-btn" onclick="setWithdrawAmount('max')">Max</button>
+          </div>
+
+          <div class="summary-box">
+            <div class="summary-row">
+              <span>Withdraw Amount</span>
+              <span class="font-medium text-slate-700" id="summaryAmount">BDT 0.00</span>
+            </div>
+            <div class="summary-row">
+              <span>Fee (0%)</span>
+              <span class="font-medium text-slate-500" id="summaryFee">- BDT 0.00</span>
+            </div>
+            <div class="summary-row total">
+              <span>You Receive</span>
+              <span class="text-green-600" id="summaryTotal">BDT 0.00</span>
+            </div>
+          </div>
+
+          <button onclick="submitWithdrawal()" class="withdraw-btn mb-8">
+            Confirm Withdrawal <i class="fas fa-arrow-right text-xs opacity-70"></i>
+          </button>
+          
+          <div class="flex justify-between items-center mb-4">
+              <span class="font-bold text-slate-800">Recent Activity</span>
+              <a href="#" onclick="showSection('withdrawal-history-section'); fetchWithdrawalHistory();" class="text-xs text-blue-600 font-medium">View All</a>
+          </div>
+          <div id="miniWithdrawHistory">
+              </div>
+
+          <div class="h-12"></div>
+      </div>
+    </div>
+<div id="payment-methods-section" class="section section-fullscreen bg-slate-50" style="z-index: 2000;">
+      
+      <div class="pt-8 px-5 pb-6">
+        <div class="flex justify-between items-center mb-6">
+          <div class="flex items-center gap-4">
+             <button onclick="showSection('profile-section'); updateUI();" class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 shadow-sm hover:text-blue-600 transition-all active:scale-95">
+                <i class="fas fa-arrow-left"></i>
+             </button>
+             <div>
+                <h1 class="text-2xl font-bold text-slate-800 leading-none">My Wallets</h1>
+                <p class="text-xs text-slate-500 font-medium mt-1">Manage payment methods</p>
+             </div>
+          </div>
+          <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm border border-blue-100">
+             <i class="fas fa-wallet"></i>
+          </div>
+        </div>
+
+        <div class="pb-32 w-full">
+            
+            <div id="paymentMethodsGrid" class="grid gap-4 w-full">
+               <div class="text-center py-10 text-gray-400">
+                  <i class="fas fa-spinner fa-spin text-2xl"></i>
+               </div>
+            </div>
+
+            <div id="paymentMethodEditor" class="edit-sheet mt-6">
+               <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                      <i class="fas fa-pen-square text-blue-500"></i> Edit Details
+                  </h3>
+                  <button type="button" onclick="clearCurrentPaymentMethod()" class="delete-btn-text">
+                    <i class="fas fa-trash-alt mr-1"></i> Unlink
+                  </button>
+               </div>
+
+               <form id="paymentEditForm" onsubmit="event.preventDefault(); saveCurrentPaymentMethod();">
+                  <input type="hidden" id="editMethodId">
+                  
+                  <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2" id="editMethodLabel">Account Number</label>
+                    <div class="relative">
+                      <input type="text" id="editMethodValue" class="modern-input w-full" placeholder="Enter details...">
+                      <i class="fas fa-pen absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xs"></i>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="save-btn-primary w-full">
+                    <i class="fas fa-check-circle"></i> Save Changes
+                  </button>
+               </form>
+            </div>
+            
+            <div class="text-center mt-8 px-4">
+                <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+                    <i class="fas fa-shield-alt mr-1"></i> Data encrypted. Select a card above to edit or link a new account.
+                </p>
+            </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- Withdrawal History Section -->
+ <div id="withdrawal-history-section" class="section section-fullscreen bg-slate-50" style="position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; padding: 0 !important; margin: 0 !important; height: 100% !important; overflow-y: auto !important; z-index: 2000;">
+        
+        <div class="bg-white px-5 pt-8 pb-4 border-b border-gray-100 sticky top-0 z-10 shadow-sm">
+            <div class="flex items-center gap-4">
+                <button onclick="showSection('profile-section')" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-slate-600 active:bg-gray-50 transition-all hover:text-blue-600">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h1 class="text-xl font-bold text-slate-800">History</h1>
+            </div>
+        </div>
+
+        <div id="withdrawalHistoryList" class="history-container">
+            <div class="text-center py-20">
+                <i class="fas fa-circle-notch fa-spin text-gray-300 text-3xl"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Profile Section -->
+   <div id="profile-section" class="section section-fullscreen" style="padding: 0 !important;">
+      
+      <div class="profile-header pt-8 pb-4 px-4 bg-slate-50/50">
+        <div class="avatar-ring">
+          <div id="profileImageContainer" class="avatar-inner">
+            <i class="fas fa-user text-3xl text-gray-300"></i>
+          </div>
+          </div>
+
+        <h2 class="text-xl font-bold text-slate-800" id="profileName">Loading...</h2>
+        <p class="text-sm text-slate-500 font-medium" id="profileUsername">@username</p>
+        
+        <div class="id-badge">
+          <i class="fas fa-fingerprint text-xs"></i>
+          <span id="profileId">ID: ---</span>
+        </div>
+      </div>
+
+      <div class="px-4 pb-24">
+          
+          <div class="balance-card-glass">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-slate-300 text-xs font-medium uppercase tracking-wider">Available Wallet</span>
+              <button id="refreshBalance" class="text-slate-400 hover:text-white transition-colors">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+            
+            <h1 class="text-4xl font-bold mb-1" id="profileBalance">BDT 0.00</h1>
+            <p class="text-xs text-emerald-400 mb-4 flex items-center gap-1">
+                <i class="fas fa-check-circle"></i> Account Verified
+            </p>
+
+            <div class="balance-btn-row">
+              <button class="balance-btn" onclick="showSection('withdraw-section')">
+                <i class="fas fa-arrow-down"></i> Withdraw
+              </button>
+              <button class="balance-btn" onclick="showSection('withdrawal-history-section'); fetchWithdrawalHistory();">
+                <i class="fas fa-clock"></i> History
+              </button>
+            </div>
+          </div>
+
+          <div class="stats-grid-profile">
+            <div class="stat-box">
+              <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-2">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <p class="text-slate-400 text-xs font-bold uppercase">Total Earned</p>
+              <p class="text-slate-800 font-bold text-lg truncate" id="profileEarnings">0.00</p>
+            </div>
+
+            <div class="stat-box">
+              <div class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-2">
+                <i class="fas fa-play"></i>
+              </div>
+              <p class="text-slate-400 text-xs font-bold uppercase">Ads Watched</p>
+              <p class="text-slate-800 font-bold text-lg" id="profileAds">0</p>
+            </div>
+
+            <div class="stat-box">
+              <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-2">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <p class="text-slate-400 text-xs font-bold uppercase">Withdrawn</p>
+              <p class="text-slate-800 font-bold text-lg truncate" id="profileWithdrawn">0.00</p>
+            </div>
+
+            <div class="stat-box">
+              <div class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mb-2">
+                <i class="fas fa-users"></i>
+              </div>
+              <p class="text-slate-400 text-xs font-bold uppercase">Referrals</p>
+              <p class="text-slate-800 font-bold text-lg" id="profileReferrals">0</p>
+            </div>
+          </div>
+
+        <div class="menu-section">
+  <div class="menu-label">Finance & Wallet</div>
+  <div class="menu-group">
+    <div class="menu-item" onclick="showSection('payment-methods-section')">
+      <div class="menu-icon bg-blue-50 text-blue-600">
+        <i class="fas fa-credit-card"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-bold text-slate-800">Payment Methods</p>
+        <p class="text-[10px] text-slate-400" id="paymentMethodStatus">Manage withdrawal accounts</p>
+      </div>
+      <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-section">
+  <div class="menu-label">Activity & Support</div>
+  <div class="menu-group">
+   
+
+    <div class="menu-item" onclick="openCommunityGroup()">
+  <div class="menu-icon bg-sky-50 text-sky-500">
+    <i class="fab fa-telegram-plane"></i>
+  </div>
+  <div class="flex-1">
+    <p class="text-sm font-bold text-slate-800">Community Support</p>
+    <p class="text-[10px] text-slate-400">Join official Telegram group</p>
+  </div>
+  <i class="fas fa-external-link-alt text-[10px] text-slate-300"></i>
+</div>
+
+  <div class="menu-item" onclick="openAboutModal()">
+      <div class="menu-icon bg-slate-50 text-slate-500">
+        <i class="fas fa-info-circle"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-bold text-slate-800">About AdVault</p>
+        <p class="text-[10px] text-slate-400">App version and build info</p>
+      </div>
+      <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+    </div>
+  </div>
+</div>
+<div id="profileBannerContainer" class="banner-zone"></div>
+<div class="menu-section">
+  <div class="menu-label">Help & Legal</div>
+  <div class="menu-group">
+    
+    <div class="menu-item" onclick="showInstructionsPopup()">
+      <div class="menu-icon bg-purple-50 text-purple-600">
+        <i class="fas fa-book-open"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-bold text-slate-800">App Guide</p>
+        <p class="text-[10px] text-slate-400">Rules & earning instructions</p>
+      </div>
+      <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+    </div>
+
+    <div class="menu-item" onclick="openLegal('terms')">
+      <div class="menu-icon bg-slate-100 text-slate-600">
+        <i class="fas fa-file-contract"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-bold text-slate-800">Terms of Service</p>
+      </div>
+      <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+    </div>
+
+    <div class="menu-item" onclick="openLegal('privacy')">
+      <div class="menu-icon bg-blue-50 text-blue-500">
+        <i class="fas fa-user-shield"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-bold text-slate-800">Privacy Policy</p>
+      </div>
+      <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+    </div>
+
+  </div>
+</div>
+          <div class="text-center mt-6">
+            <p class="text-[10px] text-slate-300 font-medium">AdVault Secured • 2025</p>
+          </div>
+    <!-- Original Edit Payment Information Modal -->
+    <div id="editModal" style="display: none;">
+      <div class="modal-content">
+        <button id="closeEditModal" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+        <h2 class="text-2xl font-bold text-gray-800 mb-5 text-center">Edit Payment Information</h2>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">PayPal Email</label>
+            <input id="editPaypal" type="email" placeholder="e.g. paypal@example.com" class="w-full p-3 border border-gray-300 rounded-lg">
+            <div id="paypalError" class="validation-error">Please enter a valid PayPal email</div>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Payoneer Email</label>
+            <input id="editPayoneer" type="email" placeholder="e.g. payoneer@example.com" class="w-full p-3 border border-gray-300 rounded-lg">
+            <div id="payoneerError" class="validation-error">Please enter a valid Payoneer email</div>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">bKash Number</label>
+            <div class="flex border border-gray-300 rounded-lg">
+              <span class="inline-flex items-center px-3 rounded-l-lg bg-gray-100 text-gray-600 text-sm">+88</span>
+              <input id="editBkash" type="text" placeholder="01XXXXXXXXX" maxlength="11"
+                     class="w-full p-3 rounded-r-lg text-gray-700">
+            </div>
+            <div id="bkashError" class="validation-error">Please enter a valid bKash number (e.g. 017XXXXXXXX or +88017XXXXXXXX)</div>
+          </div>
+        </div>
+
+        <button id="saveProfileBtn" class="btn-primary w-full mt-8 py-3">
+          Save Payment Information
+        </button>
+      </div>
+    </div>
+    
+    <div id="notif-history-section" class="section section-fullscreen bg-slate-50" style="z-index: 2000;">
+    <div class="pt-8 px-5 pb-6">
+        <div class="flex items-center gap-4 mb-6">
+            <button onclick="showSection('profile-section')" class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 shadow-sm active:scale-95">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 leading-none">Alert History</h1>
+                <p class="text-xs text-slate-500 font-medium mt-1">Recently received notifications</p>
+            </div>
+        </div>
+
+        <div id="notif-history-list" class="space-y-3 pb-24">
+            </div>
+
+        <button onclick="clearNotifHistory()" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-red-50 text-red-500 px-6 py-2 rounded-full text-xs font-bold border border-red-100 shadow-sm">
+            <i class="fas fa-trash-alt mr-1"></i> Clear All
+        </button>
+    </div>
+</div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="fintech-bottom-nav">
+    <ul class="nav-list">
+      
+      <li class="nav-item custom-nav-item active" data-target="home-section">
+        <div class="nav-icon-box">
+          <i class="fas fa-home"></i>
+        </div>
+        <span>Home</span>
+      </li>
+
+      <li class="nav-item custom-nav-item" data-target="earn-section">
+        <div class="nav-icon-box">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <span>Earn</span>
+      </li>
+      
+
+      <li class="nav-item custom-nav-item" data-target="profile-section">
+        <div class="nav-icon-box">
+          <i class="fas fa-user"></i>
+        </div>
+        <span>Profile</span>
+      </li>
+
+    </ul>
+  </nav>
+<div id="legalModal" class="legal-overlay">
+    <div class="legal-card">
+      
+      <div class="legal-header">
+        <h2 class="legal-title" id="legalTitle">
+          </h2>
+        <button class="close-legal-btn" onclick="closeLegal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="legal-body legal-text" id="legalContent">
+        </div>
+
+      <div class="legal-footer">
+        <button class="accept-btn" onclick="closeLegal()">
+          I Understand & Agree
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="termsText" style="display:none;">
+    <h3>1. Introduction</h3>
+    <p>Welcome to AdVault. By accessing or using our mobile application, you agree to be bound by these Terms of Service.</p>
+    
+    <h3>2. Earning Mechanics</h3>
+    <p>AdVault allows users to earn rewards by watching advertisements. We reserve the right to:</p>
+    <ul>
+        <li>Modify reward rates at any time without prior notice.</li>
+        <li>Limit the number of ads available per user per day.</li>
+        <li>Void earnings generated through automated bots or scripts.</li>
+    </ul>
+
+    <h3>3. Withdrawals</h3>
+    <p>Withdrawals are processed manually within 24-48 hours. The minimum withdrawal amount is BDT 100.00. We are not responsible for funds lost due to incorrect account numbers.</p>
+
+    <h3>4. Prohibited Conduct</h3>
+    <p>You agree not to use VPNs, proxies, or multiple accounts on a single device. Violation of this rule will result in a permanent ban.</p>
+  </div>
+
+  <div id="privacyText" style="display:none;">
+    <h3>1. Data Collection</h3>
+    <p>We collect minimal data required to operate the service, including your Device ID, IP Address (for fraud prevention), and Telegram User ID.</p>
+    
+    <h3>2. Usage of Data</h3>
+    <p>Your data is used solely for:</p>
+    <ul>
+        <li>Verifying task completion.</li>
+        <li>Processing withdrawal requests.</li>
+        <li>Preventing fraud and abuse.</li>
+    </ul>
+
+    <h3>3. Third-Party Services</h3>
+    <p>We use third-party ad networks (e.g., Monetag) to display advertisements. These providers may collect their own data in accordance with their privacy policies.</p>
+
+    <h3>4. Data Security</h3>
+    <p>We implement standard security measures to protect your information. However, no method of transmission over the Internet is 100% secure.</p>
+  </div>
+ <div id="aboutModal" class="fixed inset-0 z-[99999] hidden flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+    <div class="bg-white w-[90%] max-w-[340px] rounded-[2rem] p-8 text-center relative transform scale-90 transition-all duration-300 shadow-2xl" id="aboutModalCard">
+      
+      <button class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors" onclick="closeAboutModal()">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="w-20 h-20 mx-auto mb-6 bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-center overflow-hidden p-2">
+          <img src="https://worldnews24x7.infy.uk/image/advault3.png" alt="App Logo" class="w-full h-full object-contain">
+      </div>
+
+      <h2 class="text-2xl font-extrabold text-slate-800 mb-1">AdVault</h2>
+      <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-6">Premium Earning App</p>
+
+      <div class="border border-slate-100 rounded-xl overflow-hidden mb-6">
+          <div class="flex justify-between px-4 py-3 border-b border-slate-50">
+              <span class="text-sm text-slate-500 font-medium">Version</span>
+              <span class="text-sm text-slate-800 font-bold" id="about-version">Loading...</span>
+          </div>
+          <div class="flex justify-between px-4 py-3 border-b border-slate-50">
+              <span class="text-sm text-slate-500 font-medium">Updated</span>
+              <span class="text-sm text-slate-800 font-bold" id="about-date">Loading...</span>
+          </div>
+          <div class="flex justify-between px-4 py-3 bg-slate-50/50">
+              <span class="text-sm text-slate-500 font-medium">Status</span>
+              <span class="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold uppercase">Active</span>
+          </div>
+      </div>
+
+      <a href="#" id="about-channel-btn" target="_blank" class="flex items-center justify-center gap-2 w-full bg-[#229ED9] text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all">
+          <i class="fab fa-telegram-plane text-xl"></i>
+          <span>Join Official Channel</span>
+      </a>
+      
+      <p class="mt-6 text-[10px] text-slate-300 font-medium">
+          &copy; 2026 AdVault Inc. Secured System.
+      </p>
+
+    </div>
+</div>
+ <div id="notifOverlay" class="notif-overlay" onclick="closeNotificationsModal()">
+  <div class="notif-panel" onclick="event.stopPropagation()">
+    
+    <div class="flex justify-between items-center p-6 border-b border-slate-100 flex-shrink-0">
+      <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+        Notifications 
+        <span id="notifBadgeCount" class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full hidden">New</span>
+      </h2>
+      <button class="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors" onclick="markAllNotificationsRead()">
+        Mark all read
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 no-scrollbar" id="notificationList">
+       <div class="flex justify-center py-10">
+          <div class="spinner border-gray-400"></div>
+       </div>
+    </div>
+
+    <div class="p-4 border-t border-slate-100 bg-slate-50 mt-auto">
+      <button class="w-full py-3 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-colors" onclick="closeNotificationsModal()">
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
+
+  <div id="confirmModal" class="alert-overlay">
+    <div class="alert-card">
+      <div class="alert-icon-box confirm-icon">
+        <i class="fas fa-question"></i>
+      </div>
+      <h3 class="alert-title" id="confirmTitle">Are you sure?</h3>
+      <p class="alert-desc" id="confirmMsg">This action cannot be undone.</p>
+      
+      <div class="alert-actions">
+        <button class="btn-full btn-outline" onclick="closeModal('confirmModal')">
+          Cancel
+        </button>
+        <button class="btn-full btn-slate" id="confirmYesBtn" onclick="confirmAction()">
+          Yes, Proceed
+        </button>
+      </div>
+    </div>
+  </div>
+<script src="adv.js"></script>
+</body>
+</html>
