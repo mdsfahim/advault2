@@ -206,7 +206,7 @@ body {
   position: fixed;
   inset: 0;
   background: #0f172a; /* Deep Slate */
-  z-index: 9999;
+  z-index: 6000 !important;
   display: none; /* Hidden by default */
   flex-direction: column;
   font-family: 'Inter', sans-serif;
@@ -1508,7 +1508,7 @@ body:not(.header-hidden) .section-fullscreen {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1002;
+  z-index: 9000 !important;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease-in-out;
@@ -1936,7 +1936,7 @@ body:not(.header-hidden) .section-fullscreen {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 8000 !important;
   padding: 1rem;
 }
 .maintenance-content {
@@ -1990,7 +1990,7 @@ body:not(.header-hidden) .section-fullscreen {
 #telegramWarningPopup {
   position: fixed;
   inset: 0;
-  z-index: 212000; /* Highest layer */
+  z-index: 212000 !important; /* Highest layer */
   display: flex; /* Hidden by inline style initially */
   align-items: center;
   justify-content: center;
@@ -2193,7 +2193,7 @@ body:not(.header-hidden) .section-fullscreen {
   display: none;
   align-items: center;
   justify-content: center;
- z-index: 16000 !important; /* Forces it above headers and other modals */
+ z-index: 11500 !important; /* Forces it above headers and other modals */
 background: rgba(0, 0, 0, 0.85); /* Slightly darker for better focus */
 backdrop-filter: blur(5px); /* Adds blur effect to background */
 
@@ -2672,7 +2672,7 @@ backdrop-filter: blur(5px); /* Adds blur effect to background */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000;
+  z-index: 9500 !important;
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
@@ -3323,7 +3323,7 @@ backdrop-filter: blur(5px); /* Adds blur effect to background */
 .alert-overlay {
   position: fixed;
   inset: 0;
-  z-index: 15000; /* Highest priority, above Success/Maintenance */
+  z-index: 10000 !important; /* Highest priority, above Success/Maintenance */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3410,7 +3410,7 @@ backdrop-filter: blur(5px); /* Adds blur effect to background */
 #splashScreen {
   position: fixed;
   inset: 0;
-  z-index: 20000; /* Highest priority (above everything) */
+  z-index: 30000 !important; /* Highest priority (above everything) */
   background: #0f172a; /* Premium Dark Background */
   display: flex;
   flex-direction: column;
@@ -3492,7 +3492,7 @@ backdrop-filter: blur(5px); /* Adds blur effect to background */
   inset: 0;
   background: rgba(15, 23, 42, 0.4); /* Light dark tint */
   backdrop-filter: blur(4px);
-  z-index: 11000; /* High z-index to sit above header */
+  z-index: 7000 !important; /* High z-index to sit above header */
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -3585,7 +3585,7 @@ backdrop-filter: blur(5px); /* Adds blur effect to background */
   top: 1rem;
   left: 1rem;
   right: 1rem;
-  z-index: 20000; /* Above all modals */
+  z-index: 7000 !important; /* Above all modals */
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -3996,7 +3996,7 @@ backdrop-filter: blur(5px); /* Adds blur effect to background */
     right: 0;
     display: flex;
     justify-content: center;
-    z-index: 10000; /* Stays above everything */
+    z-index: 5000 !important; /* Stays above everything */
     padding: 0 20px;
     pointer-events: none;
 }

@@ -281,7 +281,7 @@
   </div>
 
   <!-- Telegram Warning Popup -->
- <div id="telegramWarningPopup" style="display: none;">
+<div id="telegramWarningPopup" style="display: none;">
     <div class="security-pattern"></div>
 
     <div class="warning-card">
@@ -299,14 +299,14 @@
             AdVault is designed to run exclusively within the Telegram app to ensure account security and proper reward tracking.
         </p>
 
-        <a href="https://t.me/AdVault_2bot" class="open-bot-btn">
+        <a href="https://t.me/AdVault_3bot" class="open-bot-btn">
             <i class="fab fa-telegram-plane text-xl"></i>
             <span>Open Telegram Bot</span>
         </a>
 
         <div class="manual-link">
-            <a href="#" onclick="document.getElementById('telegramWarningPopup').style.display='none'; return false;">
-                Continue in Browser (Limited)
+            <a href="#" onclick="location.reload(); return false;">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh Page
             </a>
         </div>
         
@@ -481,9 +481,15 @@
       <div class="action-group">
         
         <div class="flag-pill">
-          <span class="text-lg leading-none" id="country-flag">🏳️</span>
-          <span id="country-code-text">BD</span>
-        </div>
+  <img 
+  id="country-flag" 
+  src="https://flagcdn.com/w40/bd.png" 
+  alt="Flag" 
+  class="w-5 h-3.5 object-cover rounded-sm shadow-sm"
+  onerror="this.src='https://flagcdn.com/w40/un.png'"
+>
+  <span id="country-code-text">BD</span>
+</div>
 
         <button class="notif-btn" onclick="openNotificationsModal()">
           <i class="far fa-bell text-lg"></i>
@@ -1323,7 +1329,7 @@
           width: 100vw !important;
           height: 100vh !important;
           background-color: #0f172a !important;
-          z-index: 99999 !important;
+          z-index: 6000 !important;
           overflow-y: auto !important;
           padding: 0 !important;
           margin: 0 !important;

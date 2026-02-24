@@ -1973,15 +1973,57 @@ async function claimSpinReward() {
     }
     
     async function detectCountry() {
-        try {
-            const response = await fetch('https://ipapi.co/json/');
-            const data = await response.json();
-            return data.country;
-        } catch (error) {
-            console.error('Country detection failed:', error);
-            return 'BD';
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        // 1. Fetch from api.country.is (Fast & Free)
+        const response = await fetch('https://api.country.is/', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error("Geo-IP API unavailable");
+
+        const data = await response.json();
+
+        // 2. Update UI with IMAGE FLAG
+        if (data.country) {
+            const countryCode = data.country; // e.g., "US", "BD"
+            
+            // Get Elements
+            const flagImg = document.getElementById('country-flag');
+            const codeText = document.getElementById('country-code-text');
+
+            // Set Text Code
+            if (codeText) codeText.textContent = countryCode;
+
+            // Set Flag Image (Lower case code required for URL)
+            if (flagImg) {
+                flagImg.src = `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
+            }
+
+            // Save to User Data
+            if (typeof userData !== 'undefined') {
+                userData.country = countryCode;
+                userData.countryCode = countryCode;
+            }
+        }
+
+    } catch (error) {
+        console.warn("Country detection failed. Using default.");
+        
+        // Fallback to "World" Flag
+        const flagImg = document.getElementById('country-flag');
+        const codeText = document.getElementById('country-code-text');
+
+        if (codeText) codeText.textContent = "INT";
+        if (flagImg) flagImg.src = "https://flagcdn.com/w40/un.png"; // UN Flag
+
+        if (typeof userData !== 'undefined') {
+            userData.country = "International";
+            userData.countryCode = "INT";
         }
     }
+}
     
     function setCountryFlag(country) {
         const flagElement = document.getElementById('country-flag');
