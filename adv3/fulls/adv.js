@@ -1861,8 +1861,25 @@ async function claimSpinReward() {
     }
 }
 
-    function showSection(targetId) {
+    // ================= NAVIGATION LOGIC WITH HISTORY SUPPORT =================
+
+// 1. Define Main Sections (These act as the "Root" - Back button won't loop through these)
+const MAIN_SECTIONS = ['home-section', 'earn-section', 'games-section', 'profile-section'];
+
+function showSection(targetId, isBackNav = false) {
     console.log("Navigating to:", targetId);
+
+    // --- HISTORY MANAGEMENT ---
+    if (!isBackNav) {
+        if (MAIN_SECTIONS.includes(targetId)) {
+            // Switching main tabs: Replace current history so we don't build a huge stack
+            // This makes the back button exit the app or go back to the previous context
+            window.history.replaceState({ section: targetId }, "", `#${targetId}`);
+        } else {
+            // Going to a sub-page: Push new state so Back Button works
+            window.history.pushState({ section: targetId }, "", `#${targetId}`);
+        }
+    }
 
     // 1. Reset ALL sections
     document.querySelectorAll('.section, .section-fullscreen').forEach(s => {
@@ -1879,11 +1896,22 @@ async function claimSpinReward() {
     }
 
     // 3. Update Bottom Nav
-    const targetNavItem = document.querySelector(`.nav-item[data-target="${targetId}"]`);
-    if (targetNavItem) targetNavItem.classList.add('active');
+    // We only highlight nav items for main sections
+    if (MAIN_SECTIONS.includes(targetId)) {
+        const targetNavItem = document.querySelector(`.nav-item[data-target="${targetId}"]`);
+        if (targetNavItem) targetNavItem.classList.add('active');
+        
+        // Also update the Pill Nav (New Fintech Nav)
+        document.querySelectorAll('.pill-item').forEach(pill => {
+             pill.classList.remove('active');
+             if(pill.dataset.target === targetId) pill.classList.add('active');
+        });
+    } else {
+        // If in a sub-section (like Withdraw), remove highlight from bottom nav
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        document.querySelectorAll('.pill-item').forEach(pill => pill.classList.remove('active'));
+    }
     
- // ... (keep the top part of showSection the same) ...
-
     // 4. Handle Top Header Visibility
     const hideHeaderSections = [
         'profile-section', 
@@ -1892,8 +1920,8 @@ async function claimSpinReward() {
         'earning-history-section', 
         'payment-methods-section',
         'notif-history-section',
-        'spin-game-section',    // <--- ADD THIS
-        'games-section'         // <--- ADD THIS TOO (Looks better without header)
+        'spin-game-section',    
+        'games-section'         
     ];
     
     if (hideHeaderSections.includes(targetId)) {
@@ -1903,13 +1931,9 @@ async function claimSpinReward() {
     }
 
     // ==========================================
-    // 5. TRIGGER AD LOADING (THE FIX)
+    // 5. TRIGGER AD LOADING & SUB-FUNCTIONS
     // ==========================================
-    
-  
 
-
-    // Existing triggers...
     if (targetId === 'notif-history-section') {
         if(typeof renderNotifHistory === 'function') renderNotifHistory();
     }
@@ -1930,7 +1954,6 @@ async function claimSpinReward() {
         if(typeof updateUI === 'function') updateUI();
     }
     if (targetId === 'earn-section' || targetId === 'profile-section' || targetId === 'home-section' || targetId === 'games-section') {
-        // Small delay ensures the tab is fully visible before asking Adsterra to load
         setTimeout(() => {
             if(typeof renderBannerAds === 'function') {
                 renderBannerAds(targetId); 
@@ -1938,6 +1961,23 @@ async function claimSpinReward() {
         }, 50);
     }
 }
+
+// ================= BACK BUTTON LISTENER =================
+window.addEventListener('popstate', (event) => {
+    // If state exists, go to that section
+    if (event.state && event.state.section) {
+        showSection(event.state.section, true); // true = don't push history again
+    } else {
+        // If history is empty (or initial load), default to Home
+        // Check hash first just in case
+        const hash = window.location.hash.replace('#', '');
+        if (hash) {
+            showSection(hash, true);
+        } else {
+            showSection('home-section', true);
+        }
+    }
+});
 
     async function loadAdSDK() {
         return new Promise((resolve, reject) => {
@@ -2979,7 +3019,17 @@ document.addEventListener('DOMContentLoaded', () => {
             setupNotificationListener();
         }
         
-        showSection('home-section');
+        // Handle Deep Linking / Refresh
+const initialHash = window.location.hash.replace('#', '');
+if (initialHash && document.getElementById(initialHash)) {
+    // Load the hashed section, but replace state so back button works correctly from here
+    window.history.replaceState({ section: initialHash }, "", `#${initialHash}`);
+    showSection(initialHash, true);
+} else {
+    // Default Home
+    window.history.replaceState({ section: 'home-section' }, "", "#home-section");
+    showSection('home-section', true);
+}
     }
 
     // Start the app
